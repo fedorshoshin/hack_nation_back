@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>tentiq — UX Testing Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:      #f5f3ef;
+  --bg2:     #ffffff;
+  --bg3:     #f0ede8;
+  --bg4:     #e8e4dd;
+  --border:  rgba(0,0,0,0.07);
+  --border2: rgba(0,0,0,0.12);
+  --indigo:  #4a3fdb;
+  --indigo-light: rgba(74,63,219,0.08);
+  --indigo-mid:   rgba(74,63,219,0.18);
+  --amber:   #d4820a;
+  --amber-light: rgba(212,130,10,0.1);
+  --green:   #1a7a4a;
+  --green-light: rgba(26,122,74,0.09);
+  --text:    #1a1816;
+  --text2:   #6b6560;
+  --text3:   #a89f96;
+  --mono:    'Space Mono', monospace;
+  --sans:    'Plus Jakarta Sans', sans-serif;
+  --r:       12px;
+  --r-sm:    8px;
+  --shadow:  0 1px 3px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.05);
+  --shadow-lg: 0 4px 24px rgba(0,0,0,0.1), 0 1px 4px rgba(0,0,0,0.06);
+}
+html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:var(--sans); -webkit-font-smoothing:antialiased; }
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-thumb { background:var(--bg4); border-radius:2px; }
+
+/* ── Inputs ── */
+.input {
+  width:100%; height:46px;
+  background:var(--bg2); border:1.5px solid var(--border2);
+  border-radius:var(--r-sm); color:var(--text);
+  font-family:var(--sans); font-size:15px; padding:0 14px; outline:none;
+  transition:border-color 0.18s, box-shadow 0.18s;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.04);
+}
+.input:focus { border-color:var(--indigo); box-shadow:0 0 0 3px var(--indigo-light), inset 0 1px 2px rgba(0,0,0,0.04); }
+.input::placeholder { color:var(--text3); }
+
+/* ── Buttons ── */
+.btn-primary {
+  width:100%; height:46px; background:var(--indigo); border:none;
+  border-radius:var(--r-sm); color:#fff;
+  font-family:var(--sans); font-size:15px; font-weight:700;
+  cursor:pointer; transition:opacity 0.15s, transform 0.1s, box-shadow 0.15s;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  box-shadow:0 2px 8px rgba(74,63,219,0.3);
+}
+.btn-primary:hover { opacity:0.92; box-shadow:0 4px 16px rgba(74,63,219,0.35); }
+.btn-primary:active { transform:scale(0.98); }
+.btn-primary:disabled { opacity:0.4; cursor:default; box-shadow:none; }
+
+.btn-ghost {
+  background:var(--bg2); border:1.5px solid var(--border2);
+  border-radius:var(--r-sm); color:var(--text2);
+  font-family:var(--sans); font-size:14px; font-weight:500;
+  cursor:pointer; padding:0 16px; height:38px;
+  display:flex; align-items:center; gap:6px;
+  transition:all 0.15s; box-shadow:var(--shadow);
+}
+.btn-ghost:hover { border-color:var(--border2); color:var(--text); background:var(--bg3); }
+
+/* ── Card ── */
+.card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--r); box-shadow:var(--shadow); }
+
+/* ── Field label ── */
+.lbl { font-size:12px; font-weight:700; color:var(--text2); margin-bottom:7px; letter-spacing:0.04em; text-transform:uppercase; }
+
+/* ── Pill ── */
+.pill {
+  display:inline-flex; align-items:center;
+  padding:3px 10px; border-radius:20px;
+  font-size:12px; font-weight:600;
+  background:var(--bg3); color:var(--text2);
+}
+.pill.indigo { background:var(--indigo-light); color:var(--indigo); }
+.pill.green  { background:var(--green-light); color:var(--green); }
+.pill.amber  { background:var(--amber-light); color:var(--amber); }
+
+/* ── Segmented ── */
+.seg { display:flex; gap:3px; background:var(--bg3); border-radius:var(--r-sm); padding:3px; border:1px solid var(--border); }
+.seg-btn {
+  flex:1; height:34px; border-radius:6px; border:none;
+  font-family:var(--sans); font-size:13px; font-weight:600;
+  cursor:pointer; transition:all 0.15s; color:var(--text2); background:transparent;
+}
+.seg-btn.on { background:var(--bg2); color:var(--text); box-shadow:var(--shadow); }
+.seg-btn:hover:not(.on) { color:var(--text); background:rgba(0,0,0,0.03); }
+
+/* ── Progress ── */
+.prog-track { height:3px; background:var(--bg4); border-radius:2px; overflow:hidden; }
+.prog-fill  { height:100%; background:var(--indigo); border-radius:2px; transition:width 0.4s ease; }
+
+/* ── Range ── */
+input[type=range] { -webkit-appearance:none; width:100%; height:4px; background:var(--bg4); border-radius:2px; outline:none; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:18px; height:18px; background:var(--indigo); border-radius:50%; cursor:pointer; box-shadow:0 0 0 4px var(--indigo-light); }
+
+/* ── Logo ── */
+.logo { font-family:var(--sans); font-weight:800; font-size:17px; letter-spacing:-0.04em; color:var(--text); }
+.logo span { color:var(--indigo); }
+
+/* ── Divider ── */
+.divider { height:1px; background:var(--border); margin:18px 0; }
+
+/* ── Reward toast ── */
+@keyframes toastIn  { from { opacity:0; transform:translateX(100px) scale(0.92); } to { opacity:1; transform:none; } }
+@keyframes toastOut { from { opacity:1; transform:none; }  to { opacity:0; transform:translateX(100px); } }
+.toast        { animation:toastIn  0.4s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+.toast.hiding { animation:toastOut 0.28s ease forwards; }
+
+/* ── AI pulse ── */
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.45; } }
+.pulse { animation:pulse 1.8s ease-in-out infinite; }
+
+/* ── Swipe ── */
+@keyframes swipeRight { to { transform:translateX(130%) rotate(10deg); opacity:0; } }
+@keyframes swipeLeft  { to { transform:translateX(-130%) rotate(-10deg); opacity:0; } }
+.sr { animation:swipeRight 0.38s cubic-bezier(0.55,0,1,0.45) forwards; }
+.sl { animation:swipeLeft  0.38s cubic-bezier(0.55,0,1,0.45) forwards; }
+
+/* ── Summary number pop ── */
+@keyframes numPop { from { transform:scale(0.6); opacity:0; } to { transform:scale(1); opacity:1; } }
+.num-pop { animation:numPop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+
+/* ── Screen wrapper ── */
+.screen { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+
+/* ── Nav dots ── */
+.nav-dot {
+  height:7px; border-radius:4px; border:none; cursor:pointer;
+  transition:all 0.2s; background:var(--bg4); padding:0;
+}
+.nav-dot.active { background:var(--indigo); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+/* SCREEN 1 — LOGIN */
+function LoginScreen({ onNext }) {
+  const [loading, setLoading] = useState(false);
+  function submit(e) { e.preventDefault(); setLoading(true); setTimeout(()=>{ setLoading(false); onNext(); }, 700); }
+  return (
+    <div style={{width:'100vw', height:'100vh', display:'flex'}}>
+      {/* Left brand panel */}
+      <div style={{
+        width:'44%', borderRight:'1px solid var(--border)',
+        display:'flex', flexDirection:'column', justifyContent:'center', padding:'64px 56px',
+        background:'var(--bg2)'
+      }}>
+        <div className="logo" style={{fontSize:22, marginBottom:48}}><span>ten</span>tiq</div>
+        <div style={{fontSize:38, fontWeight:800, letterSpacing:'-0.04em', lineHeight:1.1, marginBottom:18}}>
+          Real feedback.<br/>Real earnings.
+        </div>
+        <div style={{fontSize:16, color:'var(--text2)', lineHeight:1.75, marginBottom:40}}>
+          Complete short UX tasks on live websites. Our AI verifies your work and pays you instantly after every session.
+        </div>
+        <div style={{display:'flex', flexDirection:'column', gap:12}}>
+          {[
+            ['Average $6–12 / hr', 'indigo'],
+            ['Instant payouts via Lightning', 'green'],
+            ['New tasks every day', null],
+            ['Work from anywhere', null],
+          ].map(([f, color]) => (
+            <div key={f} style={{display:'flex', gap:12, alignItems:'center'}}>
+              <div style={{width:7, height:7, borderRadius:'50%', flexShrink:0, background: color==='indigo' ? 'var(--indigo)' : color==='green' ? 'var(--green)' : 'var(--bg4)'}}/>
+              <span style={{fontSize:14, color: color ? 'var(--text)' : 'var(--text2)'}}>{f}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Testimonial */}
+        <div style={{marginTop:48, padding:'16px 20px', background:'var(--bg)', borderRadius:12, border:'1px solid var(--border)'}}>
+          <div style={{fontSize:13, color:'var(--text2)', lineHeight:1.6, marginBottom:10, fontStyle:'italic'}}>
+            "Made $47 last weekend testing fintech apps. Payouts are instant — love it."
+          </div>
+          <div style={{display:'flex', alignItems:'center', gap:8}}>
+            <div style={{width:28, height:28, borderRadius:'50%', background:'var(--indigo-light)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14}}>M</div>
+            <div>
+              <div style={{fontSize:12, fontWeight:700}}>Maria K.</div>
+              <div style={{fontSize:11, color:'var(--text3)'}}>963 tasks completed</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Right form */}
+      <div style={{flex:1, display:'flex', alignItems:'center', justifyContent:'center', padding:'64px'}}>
+        <div style={{width:400}}>
+          <div style={{marginBottom:36}}>
+            <div style={{fontSize:28, fontWeight:800, letterSpacing:'-0.03em', marginBottom:6}}>Welcome back</div>
+            <div style={{fontSize:15, color:'var(--text2)'}}>Don't have an account? <span style={{color:'var(--indigo)', fontWeight:600, cursor:'pointer'}} onClick={onNext}>Sign up free →</span></div>
+          </div>
+          <form onSubmit={submit} style={{display:'flex', flexDirection:'column', gap:14}}>
+            <div>
+              <div className="lbl">Email</div>
+              <input className="input" type="email" placeholder="you@example.com" defaultValue="alex@gmail.com" />
+            </div>
+            <div>
+              <div className="lbl">Password</div>
+              <input className="input" type="password" defaultValue="password123" />
+            </div>
+            <div style={{display:'flex', justifyContent:'flex-end'}}>
+              <span style={{fontSize:13, color:'var(--text2)', cursor:'pointer'}}>Forgot password?</span>
+            </div>
+            <button className="btn-primary" type="submit">
+              {loading ? <span style={{fontFamily:'var(--mono)', fontSize:13, opacity:0.8}}>signing in…</span> : 'Continue →'}
+            </button>
+          </form>
+
+          <div style={{position:'relative', margin:'20px 0'}}>
+            <div className="divider"/>
+            <span style={{position:'absolute', left:'50%', top:-9, transform:'translateX(-50%)', background:'var(--bg)', padding:'0 10px', fontSize:12, color:'var(--text3)'}}>or continue with</span>
+          </div>
+
+          <div style={{display:'flex', gap:10}}>
+            {[['G','Google'],['𝕏','Twitter']].map(([ic,nm]) => (
+              <button key={nm} className="btn-ghost" style={{flex:1, justifyContent:'center', height:44}} onClick={onNext}>
+                <span style={{fontSize:16}}>{ic}</span>{nm}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* SCREEN 2 — DEMOGRAPHICS */
+function DemoScreen({ onNext }) {
+  const [age, setAge]       = useState('25–34');
+  const [income, setIncome] = useState('$1k–3k');
+  const [device, setDevice] = useState('Desktop');
+  const [tech, setTech]     = useState(65);
+  const [tags, setTags]     = useState(new Set(['E-commerce','SaaS']));
+  const allTags = ['E-commerce','Finance','SaaS','Social','Travel','Health','Gaming','Education'];
+
+  function toggleTag(t) {
+    setTags(prev => { const s = new Set(prev); s.has(t) ? s.delete(t) : s.add(t); return s; });
+  }
+
+  return (
+    <div style={{width:560}}>
+      <div style={{marginBottom:28}}>
+        <div className="logo" style={{marginBottom:20}}><span>ten</span>tiq</div>
+        <div style={{fontSize:28, fontWeight:800, letterSpacing:'-0.03em', marginBottom:6}}>Your tester profile</div>
+        <div style={{fontSize:15, color:'var(--text2)'}}>Helps us match you with the most relevant tests</div>
+      </div>
+
+      <div style={{marginBottom:28}}>
+        <div style={{display:'flex', justifyContent:'space-between', marginBottom:8}}>
+          <span style={{fontSize:12, color:'var(--text3)', fontFamily:'var(--mono)', fontWeight:700}}>STEP 2 OF 3</span>
+        </div>
+        <div className="prog-track"><div className="prog-fill" style={{width:'66%'}}/></div>
+      </div>
+
+      <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:18}}>
+        <div>
+          <div className="lbl">Age range</div>
+          <div className="seg">
+            {['18–24','25–34','35–44','45+'].map(a => (
+              <button key={a} className={`seg-btn${age===a?' on':''}`} onClick={()=>setAge(a)}>{a}</button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <div className="lbl">Country</div>
+          <select className="input" style={{cursor:'pointer', color:'var(--text)', fontSize:14}}>
+            {['🇷🇺  Russia','🇺🇸  United States','🇩🇪  Germany','🇧🇷  Brazil','🇮🇳  India','🇬🇧  UK'].map(c => <option key={c}>{c}</option>)}
+          </select>
+        </div>
+
+        <div>
+          <div className="lbl">Monthly income</div>
+          <div className="seg">
+            {['<$500','$500–1k','$1k–3k','$3k+'].map(i => (
+              <button key={i} className={`seg-btn${income===i?' on':''}`} style={{fontSize:12}} onClick={()=>setIncome(i)}>{i}</button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <div className="lbl">Primary device</div>
+          <div className="seg">
+            {['Desktop','Mobile','Both'].map(d => (
+              <button key={d} className={`seg-btn${device===d?' on':''}`} onClick={()=>setDevice(d)}>{d}</button>
+            ))}
+          </div>
+        </div>
+
+        <div style={{gridColumn:'1/-1'}}>
+          <div className="lbl" style={{display:'flex', justifyContent:'space-between'}}>
+            <span>Tech comfort</span>
+            <span style={{color:'var(--indigo)', fontFamily:'var(--mono)', textTransform:'none', letterSpacing:0, fontSize:12, fontWeight:700}}>
+              {tech < 30 ? 'Beginner' : tech < 55 ? 'Average' : tech < 80 ? 'Proficient' : 'Expert'}
+            </span>
+          </div>
+          <input type="range" min={0} max={100} value={tech} onChange={e=>setTech(+e.target.value)} />
+        </div>
+
+        <div style={{gridColumn:'1/-1'}}>
+          <div className="lbl">Interests</div>
+          <div style={{display:'flex', flexWrap:'wrap', gap:7}}>
+            {allTags.map(t => {
+              const on = tags.has(t);
+              return (
+                <button key={t} onClick={()=>toggleTag(t)} style={{
+                  padding:'6px 14px', borderRadius:20, border:'1.5px solid',
+                  borderColor: on ? 'var(--indigo)' : 'var(--border2)',
+                  background: on ? 'var(--indigo-light)' : 'var(--bg2)',
+                  color: on ? 'var(--indigo)' : 'var(--text2)',
+                  fontSize:13, fontWeight:600, fontFamily:'var(--sans)', cursor:'pointer',
+                  transition:'all 0.14s'
+                }}>{t}</button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div style={{marginTop:28}}>
+        <button className="btn-primary" onClick={onNext}>Start testing →</button>
+      </div>
+    </div>
+  );
+}
+
+/* FAKE SITE COMPONENTS */
+
+function SiteEcommerce({ onComplete }) {
+  return (
+    <div style={{display:'flex', height:'100%'}}>
+      <div style={{width:190, background:'#fafafa', borderRight:'1px solid #eee', padding:16, flexShrink:0}}>
+        <div style={{fontSize:10, fontWeight:700, color:'#bbb', marginBottom:10, letterSpacing:'0.1em'}}>CATEGORIES</div>
+        {['All','Hoodies ◀','T-Shirts','Jackets','Pants'].map((c,i)=>(
+          <div key={c} style={{padding:'6px 10px', borderRadius:5, marginBottom:3, fontSize:13, cursor:'pointer', background:i===1?'#ede9ff':'transparent', color:i===1?'#4a3fdb':'#555', fontWeight:i===1?700:400}}>{c}</div>
+        ))}
+        <div style={{marginTop:18, fontSize:10, fontWeight:700, color:'#bbb', marginBottom:10, letterSpacing:'0.1em'}}>COLOR</div>
+        <div style={{display:'flex', flexWrap:'wrap', gap:6}}>
+          {['#3b82f6','#ef4444','#111','#10b981','#f59e0b','#8b5cf6'].map((c,i)=>(
+            <div key={c} style={{width:22,height:22,borderRadius:'50%',background:c,cursor:'pointer',border:i===0?'2px solid #333':'2px solid transparent'}}/>
+          ))}
+        </div>
+        <div style={{marginTop:18, fontSize:10, fontWeight:700, color:'#bbb', marginBottom:10, letterSpacing:'0.1em'}}>SIZE</div>
+        {['XS','S','M','L','XL'].map(s=>(
+          <span key={s} style={{display:'inline-block',marginRight:5,marginBottom:5,padding:'3px 8px',border:'1px solid',borderRadius:4,fontSize:12,borderColor:s==='M'?'#333':'#ddd',background:s==='M'?'#111':'transparent',color:s==='M'?'#fff':'#777',cursor:'pointer'}}>{s}</span>
+        ))}
+      </div>
+      <div style={{flex:1, padding:20, overflow:'auto'}}>
+        <div style={{fontSize:13, color:'#666', marginBottom:14}}>Showing <strong>Blue hoodies · Size M</strong> · 124 results</div>
+        <div style={{display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14}}>
+          {[{name:'Classic Blue Hoodie',price:'$39.99',badge:'BEST MATCH'},{name:'Sport Zip Hoodie',price:'$54.00',badge:null},{name:'Oversized Pullover',price:'$49.50',badge:null},{name:'Vintage Wash',price:'$44.00',badge:null},{name:'Fleece Quarter-Zip',price:'$38.00',badge:null},{name:'Premium Hoodie',price:'$62.00',badge:'NEW'},{name:'Lightweight',price:'$29.99',badge:null},{name:'Ribbed Hoodie',price:'$41.00',badge:null}].map((p,i)=>(
+            <div key={i} style={{cursor:'pointer'}}>
+              <div style={{height:120, borderRadius:7, marginBottom:7, background:['#bfdbfe','#93c5fd','#dbeafe','#eff6ff','#bfdbfe','#93c5fd','#dbeafe','#bfdbfe'][i], display:'flex', alignItems:'center', justifyContent:'center', position:'relative'}}>
+                <span style={{fontSize:26, opacity:0.55}}>👕</span>
+                {p.badge && <div style={{position:'absolute',top:5,left:5,background:i===0?'#3b82f6':'#555',color:'#fff',fontSize:9,padding:'2px 6px',borderRadius:3,fontWeight:700}}>{p.badge}</div>}
+              </div>
+              <div style={{fontSize:13, fontWeight:600, color:'#111', marginBottom:2}}>{p.name}</div>
+              <div style={{fontSize:12, color:'#888'}}>{p.price}</div>
+              {i===0 && <button onClick={onComplete} style={{marginTop:5,width:'100%',height:26,background:'#111',color:'#fff',border:'none',borderRadius:4,fontSize:11,fontWeight:700,cursor:'pointer'}}>Add to cart</button>}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SiteFintech({ onComplete }) {
+  return (
+    <div style={{height:'100%', background:'#f8fafc', overflow:'auto'}}>
+      <div style={{background:'#0f172a', padding:'20px 32px', display:'flex', alignItems:'center', justifyContent:'space-between'}}>
+        <div style={{color:'#fff', fontWeight:800, fontSize:18}}>neobank<span style={{color:'#818cf8'}}>.</span>io</div>
+        <div style={{display:'flex', gap:20}}>
+          {['Personal','Business','Loans','Rates'].map((t,i)=>(
+            <span key={t} style={{fontSize:13, color:i===2?'#818cf8':'rgba(255,255,255,0.65)', cursor:'pointer', fontWeight:i===2?700:400}}>{t}</span>
+          ))}
+        </div>
+        <button style={{height:32,padding:'0 16px',background:'#4f46e5',color:'#fff',border:'none',borderRadius:6,fontSize:13,fontWeight:700,cursor:'pointer'}}>Open account</button>
+      </div>
+      <div style={{padding:'28px 32px'}}>
+        <div style={{fontWeight:800, fontSize:22, marginBottom:4, color:'#0f172a'}}>Compare Loan Rates</div>
+        <div style={{fontSize:14, color:'#64748b', marginBottom:20}}>Find the best rate for your situation — updated daily</div>
+        <div style={{display:'flex', gap:12, marginBottom:20}}>
+          {[['Loan type','Personal ▾'],['Amount','$10,000 ▾'],['Term','36 months ▾'],['Credit','Good (700+) ▾']].map(([l,v])=>(
+            <div key={l} style={{flex:1}}>
+              <div style={{fontSize:10, fontWeight:700, color:'#94a3b8', marginBottom:4, letterSpacing:'0.06em'}}>{l}</div>
+              <div style={{height:36, background:'#fff', border:'1px solid #e2e8f0', borderRadius:7, display:'flex', alignItems:'center', padding:'0 12px', fontSize:13, color:'#334155', cursor:'pointer'}}>{v}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{display:'flex', flexDirection:'column', gap:10}}>
+          {[{bank:'NeoBank',rate:'5.9%',monthly:'$304',total:'$10,944',badge:'BEST RATE'},{bank:'SwiftCredit',rate:'7.2%',monthly:'$310',total:'$11,160',badge:null},{bank:'TrustLend',rate:'8.5%',monthly:'$316',total:'$11,376',badge:null},{bank:'QuickLoans',rate:'10.1%',monthly:'$323',total:'$11,628',badge:null}].map((r,i)=>(
+            <div key={i} style={{background:'#fff', border:`1.5px solid ${i===0?'#4f46e5':'#e2e8f0'}`, borderRadius:10, padding:'14px 18px', display:'flex', alignItems:'center', gap:16}}>
+              <div style={{width:40, height:40, borderRadius:8, background:['#ede9fe','#fef9c3','#dcfce7','#fee2e2'][i], display:'flex', alignItems:'center', justifyContent:'center', fontSize:18}}>🏦</div>
+              <div style={{flex:1}}>
+                <div style={{fontWeight:700, fontSize:14}}>{r.bank}</div>
+                <div style={{fontSize:12, color:'#94a3b8'}}>Personal loan · 36 months</div>
+              </div>
+              <div style={{textAlign:'center'}}>
+                <div style={{fontWeight:800, fontSize:20, color:i===0?'#4f46e5':'#0f172a'}}>{r.rate}</div>
+                <div style={{fontSize:10, color:'#94a3b8'}}>APR</div>
+              </div>
+              <div style={{textAlign:'center'}}>
+                <div style={{fontWeight:700, fontSize:14}}>{r.monthly}/mo</div>
+                <div style={{fontSize:11, color:'#94a3b8'}}>Total: {r.total}</div>
+              </div>
+              {r.badge && <div style={{background:'#ede9fe', color:'#4f46e5', fontSize:10, padding:'3px 8px', borderRadius:10, fontWeight:700}}>{r.badge}</div>}
+              <button onClick={i===0?onComplete:undefined} style={{height:32, padding:'0 14px', background:i===0?'#4f46e5':'#f1f5f9', color:i===0?'#fff':'#475569', border:'none', borderRadius:6, fontSize:12, fontWeight:700, cursor:'pointer'}}>Apply</button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SiteSaaS({ onComplete }) {
+  return (
+    <div style={{display:'flex', height:'100%'}}>
+      <div style={{width:200, background:'#1e1e2e', padding:'14px 12px', flexShrink:0}}>
+        <div style={{color:'#a78bfa', fontWeight:800, fontSize:15, marginBottom:20, padding:'0 4px'}}>analytiq</div>
+        {[['📊','Overview'],['📈','Reports'],['👥','Team'],['⚙️','Settings']].map(([ic,nm],i)=>(
+          <div key={nm} style={{display:'flex', alignItems:'center', gap:8, padding:'7px 10px', borderRadius:6, marginBottom:3, background:i===2?'rgba(167,139,250,0.15)':'transparent', cursor:'pointer'}}>
+            <span style={{fontSize:14}}>{ic}</span>
+            <span style={{fontSize:13, color:i===2?'#a78bfa':'#94a3b8', fontWeight:i===2?700:400}}>{nm}</span>
+          </div>
+        ))}
+        <div style={{margin:'16px 0', height:1, background:'rgba(255,255,255,0.07)'}}/>
+        <div style={{fontSize:10, fontWeight:700, color:'#4b5563', marginBottom:8, padding:'0 4px', letterSpacing:'0.06em'}}>WORKSPACES</div>
+        {['Marketing','Product','Design'].map((w,i)=>(
+          <div key={w} style={{display:'flex', alignItems:'center', gap:8, padding:'6px 10px', borderRadius:5, marginBottom:2, cursor:'pointer'}}>
+            <div style={{width:18, height:18, borderRadius:4, background:['#6366f1','#10b981','#f59e0b'][i], display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, color:'#fff', fontWeight:700}}>{w[0]}</div>
+            <span style={{fontSize:12, color:'#94a3b8'}}>{w}</span>
+          </div>
+        ))}
+        <div style={{margin:'8px 10px', padding:'7px 10px', borderRadius:5, border:'1px dashed rgba(255,255,255,0.12)', cursor:'pointer', display:'flex', alignItems:'center', gap:6}}>
+          <span style={{color:'#6366f1', fontSize:16}}>+</span>
+          <span style={{fontSize:12, color:'#6366f1', fontWeight:600}}>New workspace</span>
+        </div>
+      </div>
+      <div style={{flex:1, padding:24, background:'#f8fafc', overflow:'auto'}}>
+        <div style={{fontWeight:800, fontSize:20, marginBottom:4, color:'#0f172a'}}>Team Members</div>
+        <div style={{fontSize:14, color:'#64748b', marginBottom:20}}>Manage access for the Marketing workspace</div>
+        <button onClick={onComplete} style={{height:36, padding:'0 16px', background:'#6366f1', color:'#fff', border:'none', borderRadius:7, fontSize:13, fontWeight:700, cursor:'pointer', marginBottom:20}}>+ Invite member</button>
+        <div style={{background:'#fff', border:'1px solid #e2e8f0', borderRadius:10, overflow:'hidden'}}>
+          <div style={{padding:'10px 16px', borderBottom:'1px solid #e2e8f0', display:'flex', gap:12, fontSize:11, fontWeight:700, color:'#94a3b8', letterSpacing:'0.05em'}}>
+            <span style={{flex:2}}>NAME</span><span style={{flex:2}}>EMAIL</span><span style={{flex:1}}>ROLE</span><span style={{flex:1}}>STATUS</span>
+          </div>
+          {[['Alex Johnson','alex@co.com','Admin','Active'],['Maria Kim','maria@co.com','Editor','Active'],['James Lee','james@co.com','Viewer','Pending']].map(([name,email,role,status])=>(
+            <div key={name} style={{padding:'11px 16px', borderBottom:'1px solid #f1f5f9', display:'flex', gap:12, alignItems:'center'}}>
+              <div style={{flex:2, display:'flex', alignItems:'center', gap:8}}>
+                <div style={{width:28, height:28, borderRadius:'50%', background:'#ede9fe', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, fontWeight:700, color:'#6366f1'}}>{name[0]}</div>
+                <span style={{fontSize:13, fontWeight:600}}>{name}</span>
+              </div>
+              <span style={{flex:2, fontSize:12, color:'#64748b'}}>{email}</span>
+              <span style={{flex:1, fontSize:12, color:'#334155', fontWeight:600}}>{role}</span>
+              <div style={{flex:1}}>
+                <span style={{fontSize:11, padding:'3px 8px', borderRadius:10, fontWeight:700, background:status==='Active'?'#dcfce7':'#fef9c3', color:status==='Active'?'#16a34a':'#a16207'}}>{status}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SiteTravel({ onComplete }) {
+  return (
+    <div style={{height:'100%', overflow:'auto'}}>
+      <div style={{background:'linear-gradient(135deg, #0c4a6e 0%, #0369a1 100%)', padding:'20px 28px 28px'}}>
+        <div style={{color:'#fff', fontWeight:800, fontSize:18, marginBottom:20}}>flyfast ✈️</div>
+        <div style={{background:'rgba(255,255,255,0.12)', borderRadius:12, padding:16, backdropFilter:'blur(8px)'}}>
+          <div style={{display:'flex', gap:10, marginBottom:12}}>
+            {['Round-trip ◀','One-way','Multi-city'].map((t,i)=>(
+              <span key={t} style={{fontSize:13, color:i===0?'#fff':'rgba(255,255,255,0.55)', fontWeight:i===0?700:400, cursor:'pointer', paddingBottom:2, borderBottom:i===0?'2px solid #38bdf8':'2px solid transparent'}}>{t}</span>
+            ))}
+          </div>
+          <div style={{display:'grid', gridTemplateColumns:'1fr 36px 1fr 1fr 1fr auto', gap:8, alignItems:'center'}}>
+            {[['FROM','Moscow (SVO)'],['',''],['TO','Dubai (DXB)'],['DEPART','Mar 15'],['RETURN','Mar 22']].map(([l,v],i)=>(
+              i===1 ? <div key={i} style={{textAlign:'center', color:'rgba(255,255,255,0.5)', fontSize:18}}>⇄</div> :
+              <div key={i} style={{background:'rgba(255,255,255,0.15)', borderRadius:8, padding:'8px 12px'}}>
+                <div style={{fontSize:9, color:'rgba(255,255,255,0.55)', marginBottom:3, letterSpacing:'0.08em', fontWeight:700}}>{l}</div>
+                <div style={{fontSize:14, color:'#fff', fontWeight:600}}>{v}</div>
+              </div>
+            ))}
+            <button style={{height:44, padding:'0 20px', background:'#f59e0b', color:'#fff', border:'none', borderRadius:8, fontWeight:800, fontSize:14, cursor:'pointer'}}>Search</button>
+          </div>
+        </div>
+      </div>
+      <div style={{padding:'18px 28px'}}>
+        <div style={{fontSize:13, color:'#64748b', marginBottom:14}}>156 flights found · Moscow → Dubai · Mar 15–22 · 1 adult</div>
+        <div style={{display:'flex', flexDirection:'column', gap:10}}>
+          {[{airline:'Emirates',dep:'06:30',arr:'11:45',dur:'6h 15m',stops:'Direct',price:'$342',badge:'BEST VALUE'},{airline:'flydubai',dep:'09:15',arr:'14:30',dur:'6h 15m',stops:'Direct',price:'$289',badge:null},{airline:'Aeroflot',dep:'14:00',arr:'21:40',dur:'7h 40m',stops:'1 stop',price:'$221',badge:'CHEAPEST'},{airline:'Air Arabia',dep:'21:30',arr:'05:15',dur:'6h 45m',stops:'Direct',price:'$308',badge:null}].map((f,i)=>(
+            <div key={i} style={{background:'#fff', border:`1.5px solid ${i===0?'#0284c7':'#e2e8f0'}`, borderRadius:10, padding:'14px 18px', display:'flex', alignItems:'center', gap:16}}>
+              <div style={{width:44, height:44, borderRadius:8, background:['#e0f2fe','#f0fdf4','#fef3c7','#fdf4ff'][i], display:'flex', alignItems:'center', justifyContent:'center', fontSize:20}}>✈️</div>
+              <div style={{flex:1}}>
+                <div style={{fontWeight:700, fontSize:14}}>{f.airline}</div>
+                <div style={{fontSize:12, color:'#94a3b8'}}>{f.stops}</div>
+              </div>
+              <div style={{textAlign:'center'}}>
+                <div style={{fontWeight:700, fontSize:15}}>{f.dep}</div>
+                <div style={{fontSize:10, color:'#94a3b8'}}>SVO</div>
+              </div>
+              <div style={{textAlign:'center', color:'#94a3b8', fontSize:12}}>
+                <div>──── {f.dur} ────</div>
+              </div>
+              <div style={{textAlign:'center'}}>
+                <div style={{fontWeight:700, fontSize:15}}>{f.arr}</div>
+                <div style={{fontSize:10, color:'#94a3b8'}}>DXB</div>
+              </div>
+              {f.badge && <div style={{background:i===0?'#e0f2fe':'#fef3c7', color:i===0?'#0284c7':'#a16207', fontSize:10, padding:'3px 8px', borderRadius:10, fontWeight:700}}>{f.badge}</div>}
+              <div style={{textAlign:'right'}}>
+                <div style={{fontWeight:800, fontSize:18, color:'#0f172a'}}>{f.price}</div>
+                <button onClick={onComplete} style={{height:28, padding:'0 12px', background:'#0284c7', color:'#fff', border:'none', borderRadius:5, fontSize:11, fontWeight:700, cursor:'pointer', marginTop:4}}>Select</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SiteHealthcare() {
+  return (
+    <div style={{height:'100%', background:'#f0fdf4', overflow:'auto'}}>
+      <div style={{background:'#fff', padding:'14px 28px', borderBottom:'1px solid #e2e8f0', display:'flex', alignItems:'center', justifyContent:'space-between'}}>
+        <div style={{fontWeight:800, fontSize:17, color:'#166534'}}>docbook<span style={{color:'#22c55e'}}>+</span></div>
+        <div style={{display:'flex', gap:8}}>
+          <input style={{height:34, border:'1px solid #e2e8f0', borderRadius:7, padding:'0 12px', fontSize:13, outline:'none', width:200}} placeholder="Search symptoms or doctors…" />
+          <button style={{height:34, padding:'0 14px', background:'#16a34a', color:'#fff', border:'none', borderRadius:7, fontSize:13, fontWeight:700, cursor:'pointer'}}>Find doctor</button>
+        </div>
+        <button style={{height:34, padding:'0 14px', background:0, border:'1px solid #e2e8f0', borderRadius:7, fontSize:13, cursor:'pointer', background:'transparent'}}>My appointments</button>
+      </div>
+      <div style={{padding:'20px 28px'}}>
+        <div style={{fontWeight:700, fontSize:18, marginBottom:4, color:'#166534'}}>Book an appointment</div>
+        <div style={{fontSize:13, color:'#64748b', marginBottom:16}}>Showing GPs available today in Moscow</div>
+        <div style={{display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14}}>
+          {[{name:'Dr. Anna Sokolova',spec:'General Practitioner',next:'Today 14:30',rating:'4.9',reviews:247,price:'$45'},{name:'Dr. Ivan Petrov',spec:'Therapist',next:'Today 16:00',rating:'4.7',reviews:183,price:'$40'},{name:'Dr. Elena Morozova',spec:'Family Medicine',next:'Tomorrow 09:00',rating:'4.8',reviews:312,price:'$50'},{name:'Dr. Mikhail Volkov',spec:'GP · Urgent care',next:'Today 15:15',rating:'4.6',reviews:94,price:'$55'}].map((d,i)=>(
+            <div key={i} style={{background:'#fff', border:'1px solid #d1fae5', borderRadius:12, padding:16}}>
+              <div style={{display:'flex', gap:10, marginBottom:12}}>
+                <div style={{width:46, height:46, borderRadius:10, background:['#dcfce7','#dbeafe','#fef9c3','#fce7f3'][i], display:'flex', alignItems:'center', justifyContent:'center', fontSize:22}}>👨‍⚕️</div>
+                <div>
+                  <div style={{fontWeight:700, fontSize:13}}>{d.name}</div>
+                  <div style={{fontSize:11, color:'#64748b'}}>{d.spec}</div>
+                  <div style={{fontSize:11, color:'#f59e0b'}}>★ {d.rating} <span style={{color:'#94a3b8'}}>({d.reviews})</span></div>
+                </div>
+              </div>
+              <div style={{background:'#f0fdf4', borderRadius:7, padding:'7px 10px', marginBottom:10, fontSize:12}}>
+                <span style={{color:'#15803d', fontWeight:700}}>Next: </span>{d.next}
+              </div>
+              <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                <span style={{fontWeight:700, fontSize:15}}>{d.price}</span>
+                <button onClick={onComplete} style={{height:28, padding:'0 12px', background:'#16a34a', color:'#fff', border:'none', borderRadius:6, fontSize:12, fontWeight:700, cursor:'pointer'}}>Book</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SiteFood({ onComplete }) {
+  return (
+    <div style={{height:'100%', overflow:'auto'}}>
+      <div style={{background:'#ff6b35', padding:'14px 24px', display:'flex', alignItems:'center', justifyContent:'space-between'}}>
+        <div style={{color:'#fff', fontWeight:900, fontSize:18}}>bitebay 🍔</div>
+        <div style={{background:'rgba(255,255,255,0.2)', borderRadius:8, padding:'6px 14px', display:'flex', alignItems:'center', gap:6, color:'#fff', fontSize:13}}>
+          📍 Moscow, Tverskaya St
+        </div>
+        <div style={{display:'flex', gap:8}}>
+          <button style={{height:34, padding:'0 14px', background:'rgba(255,255,255,0.2)', color:'#fff', border:'none', borderRadius:7, fontSize:13, fontWeight:600, cursor:'pointer'}}>🛒 Cart (2)</button>
+        </div>
+      </div>
+      <div style={{padding:'16px 24px'}}>
+        <div style={{display:'flex', gap:8, marginBottom:16, overflowX:'auto'}}>
+          {['🍕 Pizza','🍔 Burgers ◀','🌮 Tacos','🍜 Noodles','🥗 Salads','🍣 Sushi'].map((c,i)=>(
+            <button key={c} style={{padding:'7px 14px', borderRadius:20, border:'none', background:i===1?'#ff6b35':'#f1f5f9', color:i===1?'#fff':'#475569', fontSize:13, fontWeight:600, cursor:'pointer', whiteSpace:'nowrap'}}>{c}</button>
+          ))}
+        </div>
+        <div style={{display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14}}>
+          {[{name:'Classic Smash Burger',rest:'BurgerLab',price:'$12.50',time:'25–35 min',rating:'4.8'},{name:'Double Cheese Stack',rest:'The Patty Co.',price:'$14.00',time:'20–30 min',rating:'4.9'},{name:'Crispy Chicken Burger',rest:'FingerFood',price:'$11.00',time:'30–40 min',rating:'4.6'},{name:'BBQ Bacon Burger',rest:'SmokeHouse',price:'$13.50',time:'25–35 min',rating:'4.7'},{name:'Mushroom Swiss',rest:'GreenPatty',price:'$12.00',time:'20–30 min',rating:'4.5'},{name:'Spicy Jalapeño',rest:'HeatBurger',price:'$11.50',time:'25–35 min',rating:'4.7'}].map((item,i)=>(
+            <div key={i} style={{background:'#fff', borderRadius:12, overflow:'hidden', border:'1px solid #f1f5f9', boxShadow:'0 1px 4px rgba(0,0,0,0.06)'}}>
+              <div style={{height:110, background:['#fef3c7','#fee2e2','#dbeafe','#fce7f3','#d1fae5','#ede9fe'][i], display:'flex', alignItems:'center', justifyContent:'center', fontSize:34, position:'relative'}}>
+                🍔
+                {i===1 && <div style={{position:'absolute',top:8,left:8,background:'#ef4444',color:'#fff',fontSize:9,padding:'2px 7px',borderRadius:10,fontWeight:700}}>TOP PICK</div>}
+              </div>
+              <div style={{padding:'10px 12px'}}>
+                <div style={{fontWeight:700, fontSize:13, marginBottom:2}}>{item.name}</div>
+                <div style={{fontSize:11, color:'#94a3b8', marginBottom:6}}>{item.rest} · ★ {item.rating}</div>
+                <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                  <div>
+                    <div style={{fontWeight:800, fontSize:15}}>{item.price}</div>
+                    <div style={{fontSize:10, color:'#94a3b8'}}>{item.time}</div>
+                  </div>
+                  <button onClick={onComplete} style={{width:28,height:28,borderRadius:'50%',background:'#ff6b35',color:'#fff',border:'none',fontSize:18,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>+</button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* TASK DEFINITIONS */
+const TASK_DEFS = [
+  { site:'shop.example.com', tag:'E-commerce', icon:'🛍️',
+    title:'Find a blue hoodie in size M and add it to the cart',
+    sub:'Then go to checkout — stop before entering payment info',
+    component: SiteEcommerce },
+  { site:'neobank.io', tag:'Finance', icon:'🏦',
+    title:'Find and compare business checking account fees',
+    sub:'Locate the fee comparison table — no sign-up needed',
+    component: SiteFintech },
+  { site:'analytiq.app', tag:'SaaS', icon:'📊',
+    title:'Invite a new team member to the Marketing workspace',
+    sub:'Use the Team section — assign Editor role, stop before sending',
+    component: SiteSaaS },
+  { site:'flyfast.travel', tag:'Travel', icon:'✈️',
+    title:'Find the cheapest round-trip Moscow → Dubai for next week',
+    sub:'Filter by price, add 1 checked bag — stop before checkout',
+    component: SiteTravel },
+  { site:'docbook.health', tag:'Healthcare', icon:'🏥',
+    title:'Book a GP appointment available today',
+    sub:'Pick any available doctor with a same-day slot, click Book',
+    component: SiteHealthcare },
+  { site:'bitebay.app', tag:'Food', icon:'🍔',
+    title:'Order 2 burgers with delivery to Tverskaya St',
+    sub:'Add items to cart, proceed to checkout — stop before payment',
+    component: SiteFood },
+];
+
+/* SCREEN 3 — TEST */
+function TestScreen({ onSwipe, onEnd, taskIdx = 0 }) {
+  const task = TASK_DEFS[taskIdx % TASK_DEFS.length];
+  const SiteComponent = task.component;
+
+  const [aiState, setAiState]          = useState('watching');
+  const [earned, setEarned]            = useState(1.50);
+  const [showToast, setShowToast]      = useState(false);
+  const [hidingToast, setHidingToast]  = useState(false);
+
+
+  useEffect(() => {
+    setAiState('watching'); setShowToast(false); setHidingToast(false);
+  }, [taskIdx]);
+
+  function handleComplete() {
+    if (aiState !== 'watching') return;
+    setAiState('found');
+    setTimeout(() => {
+      setAiState('done');
+      setEarned(e => +(e + 0.50).toFixed(2));
+      setShowToast(true);
+    }, 800);
+    setTimeout(() => setHidingToast(true), 3200);
+    setTimeout(() => { setShowToast(false); setHidingToast(false); onSwipe(); }, 3600);
+  }
+
+  const aiLabel = aiState==='watching' ? 'AI watching…' : aiState==='found' ? 'Task detected!' : 'Task verified ✓';
+  const aiColor = aiState==='done' ? 'var(--green)' : aiState==='found' ? 'var(--amber)' : 'var(--text3)';
+  const aiBg    = aiState==='done' ? 'var(--green-light)' : aiState==='found' ? 'var(--amber-light)' : 'var(--bg3)';
+
+  return (
+    <div style={{width:'100vw', height:'100vh', display:'flex', flexDirection:'column'}}>
+      {/* Top bar */}
+      <div style={{height:52, background:'var(--bg2)', borderBottom:'1px solid var(--border)', display:'flex', alignItems:'center', padding:'0 20px', gap:16, flexShrink:0}}>
+        <div className="logo"><span>ten</span>tiq</div>
+        <div style={{width:1, height:22, background:'var(--border)'}}/>
+        <div style={{display:'flex', gap:5, alignItems:'center'}}>
+          {[1,2,3,4,5,6,7,8].map(i=>(
+            <div key={i} style={{width:i===3?20:7, height:7, borderRadius:4, background:i<3?'var(--indigo)':i===3?'var(--indigo)':'var(--bg4)', opacity:i<3?0.35:1, transition:'all 0.3s'}}/>
+          ))}
+        </div>
+        <span style={{fontSize:12, color:'var(--text3)', fontFamily:'var(--mono)', fontWeight:700}}>TASK 3 / 8</span>
+        <span className="pill" style={{fontSize:11}}>{task.icon} {task.tag}</span>
+        <div style={{flex:1}}/>
+        <div style={{display:'flex', alignItems:'center', gap:7, padding:'5px 12px', borderRadius:8, background:aiBg, transition:'background 0.4s'}}>
+          <div className={aiState==='watching'?'pulse':''} style={{width:7, height:7, borderRadius:'50%', background:aiColor, transition:'background 0.4s'}}/>
+          <span style={{fontSize:13, fontWeight:600, color:aiColor, transition:'color 0.4s'}}>{aiLabel}</span>
+        </div>
+        <div style={{padding:'5px 14px', borderRadius:8, background:'var(--indigo-light)', border:'1px solid var(--indigo-mid)'}}>
+          <span style={{fontSize:12, fontWeight:700, color:'var(--indigo)', fontFamily:'var(--mono)'}}>${earned.toFixed(2)}</span>
+          <span style={{fontSize:11, color:'var(--text3)', marginLeft:5}}>earned</span>
+        </div>
+        <button className="btn-ghost" style={{fontSize:13}} onClick={onEnd}>End session</button>
+        <a href="index.html" style={{fontSize:13, color:'var(--text3)', textDecoration:'none'}}>← Home</a>
+      </div>
+      {/* Task bar */}
+      <div style={{background:'var(--bg2)', borderBottom:'1px solid var(--border)', padding:'12px 20px', display:'flex', alignItems:'center', gap:14, flexShrink:0}}>
+        <div style={{width:34, height:34, borderRadius:8, background:'var(--indigo-light)', border:'1px solid var(--indigo-mid)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, flexShrink:0}}>📋</div>
+        <div style={{flex:1}}>
+          <div style={{fontWeight:700, fontSize:15}}>{task.title}</div>
+          <div style={{fontSize:13, color:'var(--text2)', marginTop:1}}>{task.sub}</div>
+        </div>
+        <button className="btn-ghost" style={{fontSize:13, flexShrink:0}} onClick={onSwipe}>Skip</button>
+      </div>
+
+      {/* Site area */}
+      <div style={{flex:1, position:'relative', background:'#f5f5f5', overflow:'hidden'}}>
+        <div style={{height:38, background:'#e8e8e8', borderBottom:'1px solid #d8d8d8', display:'flex', alignItems:'center', padding:'0 12px', gap:10}}>
+          <div style={{display:'flex', gap:5}}>
+            {['#ff5f57','#ffbd2e','#28c840'].map(c=><div key={c} style={{width:11,height:11,borderRadius:'50%',background:c}}/>)}
+          </div>
+          <div style={{flex:1, height:24, background:'#fff', border:'1px solid #d0d0d0', borderRadius:5, display:'flex', alignItems:'center', padding:'0 10px', gap:6}}>
+            <span style={{fontSize:11, color:'#aaa'}}>🔒</span>
+            <span style={{fontSize:12, color:'#666', fontFamily:'var(--mono)'}}>{task.site}</span>
+          </div>
+        </div>
+        <div style={{width:'100%', height:'calc(100% - 38px)', overflow:'hidden'}}>
+          <SiteComponent onComplete={handleComplete} />
+        </div>
+
+        {showToast && (
+          <div className={`toast${hidingToast?' hiding':''}`} style={{position:'absolute', right:24, bottom:24, background:'var(--bg2)', border:'1px solid rgba(26,122,74,0.25)', borderRadius:14, padding:'14px 18px', display:'flex', alignItems:'center', gap:14, boxShadow:'0 8px 32px rgba(0,0,0,0.14)', minWidth:210}}>
+            <div style={{width:42, height:42, borderRadius:10, background:'var(--green-light)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:20}}>💸</div>
+            <div>
+              <div style={{fontFamily:'var(--mono)', fontWeight:700, fontSize:22, color:'var(--green)', lineHeight:1}}>+$0.50</div>
+              <div style={{fontSize:12, color:'var(--text2)', marginTop:3}}>Task complete · nice work!</div>
+            </div>
+          </div>
+        )}
+
+
+      </div>
+    </div>
+  );
+}
+
+/* == SCREEN 4 — SWIPE == */
+const _rewards = [0.50, 0.75, 0.50, 1.00, 0.65, 0.55];
+const _times   = ['~3 min','~4 min','~3 min','~5 min','~4 min','~4 min'];
+const SITES = TASK_DEFS.map((t, i) => ({
+  name: t.site, task: t.title, reward: _rewards[i], time: _times[i], tag: t.tag, icon: t.icon, idx: i
+}));
+
+function SwipeScreen({ onStart, onEnd }) {
+  const [idx, setIdx]   = useState(0);
+  const [dir, setDir]   = useState(null);
+  const [busy, setBusy] = useState(false);
+
+  function swipe(d) {
+    if (busy) return;
+    setDir(d); setBusy(true);
+    setTimeout(()=>{
+      const nextIdx = (idx+1) % SITES.length;
+      setIdx(nextIdx);
+      setDir(null); setBusy(false);
+      if (d==='right') onStart(idx);
+    }, 370);
+  }
+
+  const s = SITES[idx];
+  const next = SITES[(idx+1)%SITES.length];
+
+  return (
+    <div style={{width:'100vw', height:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center'}}>
+      <div style={{position:'absolute', top:0, left:0, right:0, height:52, display:'flex', alignItems:'center', padding:'0 24px', justifyContent:'space-between', borderBottom:'1px solid var(--border)', background:'var(--bg2)'}}>
+        <div className="logo"><span>ten</span>tiq</div>
+        <div style={{display:'flex', alignItems:'center', gap:10}}>
+          <span className="pill indigo">$2.00 earned</span>
+          <button className="btn-ghost" style={{fontSize:13}} onClick={onEnd}>End session</button>
+        </div>
+      </div>
+
+      <div style={{textAlign:'center', marginBottom:28}}>
+        <div style={{fontSize:26, fontWeight:800, letterSpacing:'-0.03em', marginBottom:5}}>Next up</div>
+        <div style={{fontSize:14, color:'var(--text2)'}}>Swipe right to start · left to skip</div>
+      </div>
+
+      {/* Card deck */}
+      <div style={{width:420, height:270, position:'relative', marginBottom:28}}>
+        {/* Back card */}
+        <div className="card" style={{position:'absolute', left:14, right:-14, top:12, height:250, opacity:0.35, transform:'scale(0.96)', transformOrigin:'top center'}}>
+          <div style={{padding:24, fontWeight:700, color:'var(--text3)', fontSize:15}}>{next.icon} {next.name}</div>
+        </div>
+
+        {/* Main card */}
+        <div className={`card${dir==='right'?' sr':dir==='left'?' sl':''}`} style={{
+          position:'absolute', inset:0, padding:26,
+          display:'flex', flexDirection:'column', justifyContent:'space-between',
+          boxShadow:'var(--shadow-lg)', cursor:'grab'
+        }}>
+          <div>
+            <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:12}}>
+              <div>
+                <div style={{fontSize:19, fontWeight:800, marginBottom:4}}>{s.name}</div>
+                <div style={{fontSize:14, color:'var(--text2)', lineHeight:1.5}}>{s.task}</div>
+              </div>
+              <div style={{background:'var(--amber-light)', border:'1px solid rgba(212,130,10,0.2)', padding:'6px 12px', borderRadius:8, textAlign:'right', flexShrink:0, marginLeft:16}}>
+                <div style={{fontFamily:'var(--mono)', fontWeight:700, color:'var(--amber)', fontSize:18}}>${s.reward.toFixed(2)}</div>
+                <div style={{fontSize:10, color:'var(--text3)'}}>reward</div>
+              </div>
+            </div>
+            <div style={{display:'flex', gap:7}}>
+              <span className="pill">{s.time}</span>
+              <span className="pill">{s.tag}</span>
+            </div>
+          </div>
+          <div style={{height:72, borderRadius:8, background:'var(--bg3)', border:'1px solid var(--border)', display:'flex', alignItems:'center', justifyContent:'center'}}>
+            <span style={{color:'var(--text3)', fontSize:13}}>site preview</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Action buttons */}
+      <div style={{display:'flex', gap:14, alignItems:'center'}}>
+        <button onClick={()=>swipe('left')} style={{width:52, height:52, borderRadius:'50%', background:'var(--bg2)', border:'1.5px solid var(--border2)', fontSize:18, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'var(--shadow)'}}>👈</button>
+        <button onClick={()=>swipe('right')} style={{width:60, height:60, borderRadius:'50%', background:'var(--indigo)', border:'none', color:'#fff', fontSize:22, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 4px 16px rgba(74,63,219,0.35)'}}>→</button>
+        <button onClick={()=>swipe('left')} style={{width:52, height:52, borderRadius:'50%', background:'var(--bg2)', border:'1.5px solid var(--border2)', fontSize:18, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'var(--shadow)'}}>🚩</button>
+      </div>
+      <div style={{marginTop:10, fontSize:12, color:'var(--text3)'}}>skip &nbsp;·&nbsp; start &nbsp;·&nbsp; report</div>
+
+      {/* Session mini-stats */}
+      <div style={{display:'flex', gap:10, marginTop:28}}>
+        {[['5','tasks'],['$2.00','earned'],['23 min','time']].map(([v,l])=>(
+          <div key={l} className="card" style={{padding:'10px 16px', textAlign:'center', minWidth:90}}>
+            <div style={{fontFamily:'var(--mono)', fontWeight:700, fontSize:17}}>{v}</div>
+            <div style={{fontSize:11, color:'var(--text3)', marginTop:2}}>{l}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* SCREEN 5 — SUMMARY */
+function SummaryScreen({ onNext, isNew }) {
+  const [pop, setPop] = useState(false);
+  useEffect(()=>{ setTimeout(()=>setPop(true), 150); },[]);
+  return (
+    <div style={{width:600, padding:'60px 0'}}>
+      <div style={{textAlign:'center', marginBottom:36}}>
+        <div style={{fontSize:42, marginBottom:10}}>🏆</div>
+        <div style={{fontSize:32, fontWeight:800, letterSpacing:'-0.04em', marginBottom:6}}>Session complete</div>
+        <div style={{fontSize:15, color:'var(--text2)'}}>Here's what you earned today</div>
+      </div>
+
+      {/* Big total */}
+      <div style={{background:'var(--indigo-light)', border:'1px solid var(--indigo-mid)', borderRadius:16, padding:'28px 32px', textAlign:'center', marginBottom:18}}>
+        <div style={{fontSize:12, fontFamily:'var(--mono)', color:'var(--text2)', marginBottom:6, letterSpacing:'0.06em', fontWeight:700}}>TOTAL EARNED</div>
+        <div className={pop?'num-pop':''} style={{fontFamily:'var(--mono)', fontWeight:700, fontSize:68, color:'var(--indigo)', lineHeight:1}}>$4.25</div>
+        <div style={{color:'var(--text2)', fontSize:13, marginTop:8}}>≈ 28,450 sats · Lightning Network</div>
+      </div>
+
+      {/* Stats */}
+      <div style={{display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:10, marginBottom:18}}>
+        {[['8','Tasks done'],['2','Skipped'],['41 min','Duration'],['$6.21/hr','Rate']].map(([v,l])=>(
+          <div key={l} className="card" style={{padding:'14px 12px', textAlign:'center'}}>
+            <div style={{fontFamily:'var(--mono)', fontWeight:700, fontSize:20, marginBottom:3, color:l==='Rate'?'var(--indigo)':'var(--text)'}}>{v}</div>
+            <div style={{fontSize:11, color:'var(--text2)'}}>{l}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Site list */}
+      <div className="card" style={{padding:20, marginBottom:24}}>
+        <div style={{fontSize:11, fontWeight:700, color:'var(--text3)', letterSpacing:'0.06em', marginBottom:14}}>SITES TESTED</div>
+        {[['shop.example.com','Add blue hoodie to cart','$1.00'],
+          ['fintech-startup.io','Compare loan rates','$1.75'],
+          ['saas-dashboard.app','Create workspace & invite','$1.50']].map(([site,task,earn])=>(
+          <div key={site} style={{display:'flex', alignItems:'center', gap:12, paddingBottom:10, marginBottom:10, borderBottom:'1px solid var(--border)'}}>
+            <div style={{width:7,height:7,borderRadius:'50%',background:'var(--indigo)',flexShrink:0}}/>
+            <div style={{flex:1}}>
+              <div style={{fontSize:14, fontWeight:600}}>{site}</div>
+              <div style={{fontSize:12, color:'var(--text2)'}}>{task}</div>
+            </div>
+            <div style={{fontFamily:'var(--mono)', fontWeight:700, color:'var(--green)', fontSize:14}}>{earn}</div>
+          </div>
+        ))}
+      </div>
+
+      <button className="btn-primary" onClick={onNext}>
+        {isNew ? '⚡ Connect wallet & collect $4.25' : '⚡ Send $4.25 to my wallet →'}
+      </button>
+      <div style={{textAlign:'center', marginTop:12}}>
+        <span style={{fontSize:13, color:'var(--text3)', cursor:'pointer'}}>Share results for a +10% bonus →</span>
+      </div>
+    </div>
+  );
+}
+
+/* SCREEN 6A — NEW WALLET */
+function WalletNewScreen({ onDone }) {
+  const [sel, setSel] = useState(null);
+  return (
+    <div style={{width:460}}>
+      <div style={{textAlign:'center', marginBottom:28}}>
+        <div style={{fontSize:32, marginBottom:10}}>⚡</div>
+        <div style={{fontSize:26, fontWeight:800, letterSpacing:'-0.03em', marginBottom:6}}>Connect your wallet</div>
+        <div style={{fontSize:15, color:'var(--text2)'}}>Receive <span style={{fontFamily:'var(--mono)', fontWeight:700, color:'var(--indigo)'}}>$4.25</span> via Lightning</div>
+      </div>
+      <div style={{display:'flex', flexDirection:'column', gap:9, marginBottom:22}}>
+        {[['⚡','Wallet of Satoshi','Easiest — no setup required','custodial'],
+          ['🟡','Muun','Self-custody, beginner friendly','self-custody'],
+          ['🦁','Phoenix','Self-custody, most powerful','self-custody']].map(([icon,name,desc,type])=>(
+          <button key={name} onClick={()=>setSel(name)} style={{
+            display:'flex', alignItems:'center', gap:14, padding:'13px 16px',
+            background: sel===name ? 'var(--indigo-light)' : 'var(--bg2)',
+            border: `1.5px solid ${sel===name ? 'var(--indigo)' : 'var(--border2)'}`,
+            borderRadius:12, cursor:'pointer', textAlign:'left',
+            boxShadow:'var(--shadow)', transition:'all 0.14s'
+          }}>
+            <span style={{fontSize:26}}>{icon}</span>
+            <div style={{flex:1}}>
+              <div style={{fontSize:14, fontWeight:700, color:'var(--text)', marginBottom:2}}>{name}</div>
+              <div style={{fontSize:12, color:'var(--text2)'}}>{desc}</div>
+            </div>
+            <span className="pill" style={{fontSize:11, flexShrink:0}}>{type}</span>
+            {sel===name && <span style={{color:'var(--indigo)', fontSize:17, marginLeft:4}}>✓</span>}
+          </button>
+        ))}
+      </div>
+
+      <div style={{position:'relative', margin:'18px 0'}}>
+        <div className="divider"/>
+        <span style={{position:'absolute', left:'50%', top:-9, transform:'translateX(-50%)', background:'var(--bg)', padding:'0 10px', fontSize:12, color:'var(--text3)'}}>or paste manually</span>
+      </div>
+
+      <input className="input" placeholder="Lightning invoice or LNURL (lnbc…)" style={{fontFamily:'var(--mono)', fontSize:13, marginBottom:18}} />
+      <button className="btn-primary" onClick={onDone} disabled={!sel}>Receive $4.25 →</button>
+    </div>
+  );
+}
+
+/* SCREEN 6B — PAID */
+function WalletDoneScreen({ onRestart }) {
+  const [pop, setPop] = useState(false);
+  useEffect(()=>{ setTimeout(()=>setPop(true), 200); },[]);
+  return (
+    <div style={{width:400, textAlign:'center'}}>
+      <div style={{width:68, height:68, borderRadius:'50%', background:'var(--green-light)', border:'2px solid rgba(26,122,74,0.2)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:30, margin:'0 auto 18px'}}>⚡</div>
+      <div style={{fontSize:28, fontWeight:800, marginBottom:6}}>Payment sent!</div>
+      <div style={{color:'var(--text2)', fontSize:15, marginBottom:28}}>Funds arrived instantly</div>
+
+      <div style={{background:'var(--green-light)', border:'1px solid rgba(26,122,74,0.18)', borderRadius:14, padding:'22px 28px', marginBottom:20}}>
+        <div style={{fontSize:11, fontFamily:'var(--mono)', color:'var(--text2)', marginBottom:4, fontWeight:700}}>SENT TO WALLET</div>
+        <div className={pop?'num-pop':''} style={{fontFamily:'var(--mono)', fontWeight:700, fontSize:60, color:'var(--green)', lineHeight:1}}>$4.25</div>
+        <div style={{marginTop:10, display:'flex', justifyContent:'center', gap:7}}>
+          <span className="pill green">⚡ instant</span>
+          <span className="pill green">confirmed</span>
+        </div>
+      </div>
+
+      <div className="card" style={{padding:'10px 16px', marginBottom:22}}>
+        <div style={{display:'flex', justifyContent:'space-between', fontSize:13}}>
+          <span style={{color:'var(--text2)'}}>Transaction ID</span>
+          <span style={{fontFamily:'var(--mono)', color:'var(--text3)', fontSize:12}}>a4f3c2…b92c</span>
+        </div>
+      </div>
+
+      <button className="btn-primary" onClick={onRestart}>Start new session →</button>
+    </div>
+  );
+}
+
+/* ROOT APP */
+const SCREENS = ['login','demo','test','summary','wallet'];
+
+function App() {
+  const [cur, setCur]     = useState('login');
+  const [isNew]           = useState(false);
+  const [taskIdx, setTaskIdx] = useState(0);
+
+  function go(s) { setCur(s); }
+  function nextTask() { setTaskIdx(i => (i + 1) % TASK_DEFS.length); setCur('test'); }
+
+  return (
+    <div style={{width:'100vw', height:'100vh', overflow:'hidden', position:'relative', background:'var(--bg)'}}>
+      {cur === 'login'   && <div className="screen"><LoginScreen onNext={()=>go('demo')} /></div>}
+      {cur === 'demo'    && <div className="screen"><DemoScreen  onNext={()=>go('test')} /></div>}
+      {cur === 'test'    && <div className="screen" style={{alignItems:'flex-start'}}><TestScreen onSwipe={nextTask} onEnd={()=>go('summary')} taskIdx={taskIdx} /></div>}
+      {cur === 'summary' && <div className="screen" style={{alignItems:'flex-start', overflowY:'auto'}}><div style={{width:'100%',display:'flex',justifyContent:'center'}}><SummaryScreen onNext={()=>go('wallet')} isNew={isNew} /></div></div>}
+      {cur === 'wallet'  && <div className="screen">{isNew ? <WalletNewScreen onDone={()=>go('login')} /> : <WalletDoneScreen onRestart={()=>go('login')} />}</div>}
+
+      {/* Nav dots */}
+      <div style={{position:'fixed', bottom:16, left:'50%', transform:'translateX(-50%)', display:'flex', gap:7, alignItems:'center', background:'rgba(255,255,255,0.85)', backdropFilter:'blur(8px)', padding:'7px 14px', borderRadius:20, border:'1px solid var(--border)', boxShadow:'var(--shadow)'}}>
+        {SCREENS.map(s=>(
+          <button key={s} onClick={()=>go(s)} title={s} className={`nav-dot${cur===s?' active':''}`} style={{width:cur===s?20:7}}/>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
