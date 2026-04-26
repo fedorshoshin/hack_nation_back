@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Compare Loan Rates</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="./peach-sdk1.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #f5f3ef;
+  --bg2: #ffffff;
+  --bg3: #f0ede8;
+  --border: rgba(0,0,0,0.07);
+  --border2: rgba(0,0,0,0.12);
+  --indigo: #4a3fdb;
+  --text: #1a1816;
+  --text2: #6b6560;
+  --mono: 'Space Mono', monospace;
+  --sans: 'Plus Jakarta Sans', sans-serif;
+}
+html, body { width:100%; min-height:100%; background:var(--bg); color:var(--text); font-family:var(--sans); -webkit-font-smoothing:antialiased; }
+.browser {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.browser-bar {
+  height: 38px;
+  background: #e8e8e8;
+  border-bottom: 1px solid #d8d8d8;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.dots { display: flex; gap: 5px; }
+.dot { width: 11px; height: 11px; border-radius: 50%; }
+.address {
+  flex: 1;
+  height: 24px;
+  background: #fff;
+  border: 1px solid #d0d0d0;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  gap: 6px;
+}
+.address span { font-size: 12px; color: #666; font-family: var(--mono); }
+.complete-toast {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  background: #ecfdf5;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.14);
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  transition: opacity .2s, transform .2s;
+}
+.complete-toast.show { opacity: 1; transform: translateY(0); }
+</style>
+<script>
+(function () {
+  function getQueryParam(name) {
+    var params = new URLSearchParams(window.location.search)
+    return params.get(name)
+  }
+
+  function getOrCreateSessionId() {
+    var key = 'agentsplit_session_id'
+    var existingSessionId = localStorage.getItem(key)
+
+    if (existingSessionId) {
+      return existingSessionId
+    }
+
+    var sessionId =
+      'session_' +
+      Date.now() +
+      '_' +
+      Math.random().toString(36).slice(2)
+
+    localStorage.setItem(key, sessionId)
+
+    return sessionId
+  }
+
+  function showCompleteToast() {
+    var toast = document.querySelector('.complete-toast')
+    if (!toast) return
+
+    toast.classList.add('show')
+    setTimeout(function () {
+      toast.classList.remove('show')
+    }, 2500)
+  }
+
+  function getSdkConfig() {
+    return {
+      campaignId:
+        getQueryParam('campaignId') ||
+        getQueryParam('campaign_id') ||
+        document.body.dataset.campaignId ||
+        'demo-campaign',
+      sessionId:
+        getQueryParam('sessionId') ||
+        getQueryParam('session_id') ||
+        getOrCreateSessionId(),
+      variant:
+        getQueryParam('variant') ||
+        getQueryParam('variant_name') ||
+        document.body.dataset.variantName ||
+        'A',
+      apiUrl:
+        getQueryParam('apiUrl') ||
+        getQueryParam('api_url') ||
+        document.body.dataset.apiUrl ||
+        '',
+      successEvent:
+        getQueryParam('successEvent') ||
+        getQueryParam('success_event') ||
+        document.body.dataset.successEvent ||
+        'task_completed',
+      debug:
+        getQueryParam('debug') === '1' ||
+        getQueryParam('debug') === 'true' ||
+        document.body.dataset.debug === 'true'
+    }
+  }
+
+  window.PeachTest = {
+    completed: false,
+    config: null,
+
+    init: function () {
+      var sdkConfig = getSdkConfig()
+      window.PeachTest.config = sdkConfig
+
+      if (!window.AgentSplit || typeof window.AgentSplit.init !== 'function') {
+        console.warn('AgentSplit SDK is not loaded')
+        return
+      }
+
+      try {
+        window.AgentSplit.init({
+          campaignId: sdkConfig.campaignId,
+          sessionId: sdkConfig.sessionId,
+          variant: sdkConfig.variant,
+          variant_name: sdkConfig.variant,
+          apiUrl: sdkConfig.apiUrl,
+          successEvent: sdkConfig.successEvent,
+          debug: sdkConfig.debug
+        })
+      } catch (error) {
+        console.warn('AgentSplit init failed:', error)
+      }
+    },
+
+    completeTask: function (successEvent, extraPayload) {
+      if (window.PeachTest.completed) return
+      window.PeachTest.completed = true
+
+      var payload = Object.assign(
+        {
+          reason: 'task_completed',
+          success_event: successEvent || window.PeachTest.config.successEvent,
+          variant: window.PeachTest.config.variant
+        },
+        extraPayload || {}
+      )
+
+      if (window.AgentSplit && typeof window.AgentSplit.completeTask === 'function') {
+        try {
+          // Your SDK does both things here:
+          // 1. window.parent.postMessage({ source: 'agentsplit', type: 'event', data })
+          // 2. fetch(apiUrl + '/events', ...) when apiUrl is provided
+          window.AgentSplit.completeTask(payload)
+        } catch (error) {
+          console.warn('AgentSplit completeTask failed:', error)
+        }
+      } else if (window.parent && window.parent !== window) {
+        window.parent.postMessage(
+          {
+            source: 'agentsplit',
+            type: 'event',
+            data: {
+              campaign_id: window.PeachTest.config.campaignId,
+              campaignId: window.PeachTest.config.campaignId,
+              sessionId: window.PeachTest.config.sessionId,
+              variant: window.PeachTest.config.variant,
+              variant_name: window.PeachTest.config.variant,
+              event: 'task_completed',
+              payload: payload,
+              timestamp: new Date().toISOString()
+            }
+          },
+          '*'
+        )
+      }
+
+      showCompleteToast()
+    }
+  }
+
+  window.addEventListener('DOMContentLoaded', function () {
+    window.PeachTest.init()
+  })
+})()
+</script>
+
+<style>
+.site {
+  min-height: calc(100vh - 38px);
+  background: #f8fafc;
+  overflow: auto;
+}
+.topbar {
+  background: #0f172a;
+  padding: 20px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.logo {
+  color: #fff;
+  font-weight: 800;
+  font-size: 18px;
+}
+.logo span { color: #818cf8; }
+.nav {
+  display: flex;
+  gap: 20px;
+}
+.nav span {
+  font-size: 13px;
+  color: rgba(255,255,255,.65);
+  cursor: pointer;
+}
+.nav span.active {
+  color: #818cf8;
+  font-weight: 700;
+}
+.open-account {
+  height: 32px;
+  padding: 0 16px;
+  background: #4f46e5;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.content {
+  padding: 28px 32px;
+}
+h1 {
+  font-weight: 800;
+  font-size: 22px;
+  margin-bottom: 4px;
+  color: #0f172a;
+}
+.subtitle {
+  font-size: 14px;
+  color: #64748b;
+  margin-bottom: 20px;
+}
+.filters {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.filter { flex: 1; }
+.filter-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #94a3b8;
+  margin-bottom: 4px;
+  letter-spacing: .06em;
+}
+.filter-value {
+  height: 36px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  font-size: 13px;
+  color: #334155;
+  cursor: pointer;
+}
+.rates {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.rate-card {
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.rate-card.best { border-color: #4f46e5; }
+.bank-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+.bank-info { flex: 1; }
+.bank-name {
+  font-weight: 700;
+  font-size: 14px;
+}
+.bank-meta {
+  font-size: 12px;
+  color: #94a3b8;
+}
+.metric {
+  text-align: center;
+}
+.apr {
+  font-weight: 800;
+  font-size: 20px;
+  color: #0f172a;
+}
+.best .apr { color: #4f46e5; }
+.metric-label {
+  font-size: 10px;
+  color: #94a3b8;
+}
+.monthly {
+  font-weight: 700;
+  font-size: 14px;
+}
+.total {
+  font-size: 11px;
+  color: #94a3b8;
+}
+.badge {
+  background: #ede9fe;
+  color: #4f46e5;
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-weight: 700;
+}
+.apply {
+  height: 32px;
+  padding: 0 14px;
+  background: #f1f5f9;
+  color: #475569;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.best .apply {
+  background: #4f46e5;
+  color: #fff;
+}
+.apply:hover { opacity: .9; }
+@media (max-width: 850px) {
+  .filters { flex-direction: column; }
+  .rate-card { flex-wrap: wrap; }
+  .nav { display: none; }
+}
+</style>
+</head>
+<body data-campaign-id="loan_rates_test" data-variant-name="loan_rates" data-success-event="loan_rate_selected">
+<div class="browser">
+  <div class="browser-bar">
+    <div class="dots">
+      <div class="dot" style="background:#ff5f57"></div>
+      <div class="dot" style="background:#ffbd2e"></div>
+      <div class="dot" style="background:#28c840"></div>
+    </div>
+    <div class="address"><span>🔒 neobank.io</span></div>
+  </div>
+
+  <main class="site">
+    <header class="topbar">
+      <div class="logo">neobank<span>.</span>io</div>
+      <nav class="nav">
+        <span>Personal</span>
+        <span>Business</span>
+        <span class="active">Loans</span>
+        <span>Rates</span>
+      </nav>
+      <button class="open-account">Open account</button>
+    </header>
+
+    <section class="content">
+      <h1>Compare Loan Rates</h1>
+      <div class="subtitle">Find the best rate for your situation — updated daily</div>
+
+      <div class="filters">
+        <div class="filter"><div class="filter-label">Loan type</div><div class="filter-value">Personal ▾</div></div>
+        <div class="filter"><div class="filter-label">Amount</div><div class="filter-value">$10,000 ▾</div></div>
+        <div class="filter"><div class="filter-label">Term</div><div class="filter-value">36 months ▾</div></div>
+        <div class="filter"><div class="filter-label">Credit</div><div class="filter-value">Good (700+) ▾</div></div>
+      </div>
+
+      <div class="rates">
+        <article class="rate-card best">
+          <div class="bank-icon" style="background:#ede9fe">🏦</div>
+          <div class="bank-info">
+            <div class="bank-name">NeoBank</div>
+            <div class="bank-meta">Personal loan · 36 months</div>
+          </div>
+          <div class="metric"><div class="apr">5.9%</div><div class="metric-label">APR</div></div>
+          <div class="metric"><div class="monthly">$304/mo</div><div class="total">Total: $10,944</div></div>
+          <div class="badge">BEST RATE</div>
+          <button class="apply" onclick="PeachTest.completeTask('loan_rate_selected', { bank: 'NeoBank', apr: '5.9%', monthly: '$304', total: '$10,944' })">Apply</button>
+        </article>
+
+        <article class="rate-card">
+          <div class="bank-icon" style="background:#fef9c3">🏦</div>
+          <div class="bank-info"><div class="bank-name">SwiftCredit</div><div class="bank-meta">Personal loan · 36 months</div></div>
+          <div class="metric"><div class="apr">7.2%</div><div class="metric-label">APR</div></div>
+          <div class="metric"><div class="monthly">$310/mo</div><div class="total">Total: $11,160</div></div>
+          <button class="apply">Apply</button>
+        </article>
+
+        <article class="rate-card">
+          <div class="bank-icon" style="background:#dcfce7">🏦</div>
+          <div class="bank-info"><div class="bank-name">TrustLend</div><div class="bank-meta">Personal loan · 36 months</div></div>
+          <div class="metric"><div class="apr">8.5%</div><div class="metric-label">APR</div></div>
+          <div class="metric"><div class="monthly">$316/mo</div><div class="total">Total: $11,376</div></div>
+          <button class="apply">Apply</button>
+        </article>
+
+        <article class="rate-card">
+          <div class="bank-icon" style="background:#fee2e2">🏦</div>
+          <div class="bank-info"><div class="bank-name">QuickLoans</div><div class="bank-meta">Personal loan · 36 months</div></div>
+          <div class="metric"><div class="apr">10.1%</div><div class="metric-label">APR</div></div>
+          <div class="metric"><div class="monthly">$323/mo</div><div class="total">Total: $11,628</div></div>
+          <button class="apply">Apply</button>
+        </article>
+      </div>
+    </section>
+  </main>
+</div>
+<div class="complete-toast">Task completed ✓</div>
+</body>
+</html>

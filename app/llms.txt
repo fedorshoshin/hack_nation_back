@@ -14,11 +14,11 @@ OpenAPI JSON:      http://178.104.210.8:8000/openapi.json
 Interactive docs:  http://178.104.210.8:8000/docs
 Tester frontend:   http://178.104.210.8:8001/?sessionId=<session-id>
 Static demo app:   http://178.104.210.8:8002/index_new.html
-Browser SDK:       http://178.104.210.8:8000/peach-sdk.js
+Browser SDK:       http://178.104.210.8:8000/peach-sdk1.js
 LLM guide:         http://178.104.210.8:8000/llms.txt
 ```
 
-The static app directory also serves `peach-sdk.js` and `llms.txt` on port `8002`.
+The static app directory also serves `peach-sdk1.js` and `llms.txt` on port `8002`.
 
 ## Core Concepts
 
@@ -320,7 +320,7 @@ The runner:
 Use the current SDK URL:
 
 ```html
-<script src="http://178.104.210.8:8000/peach-sdk.js"></script>
+<script src="http://178.104.210.8:8000/peach-sdk1.js"></script>
 ```
 
 The SDK defines `window.AgentSplit`.

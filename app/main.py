@@ -57,7 +57,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-SDK_PATH = Path(__file__).with_name("peach-sdk.js")
+SDK_PATH = Path(__file__).with_name("peach-sdk1.js")
 LLMS_PATH = Path(__file__).with_name("llms.txt")
 TESTER_PAYOUT_LN_ADDRESS = "nwc1777195149882@getalby.com"
 
@@ -97,8 +97,15 @@ async def root() -> dict[str, str]:
     }
 
 
-@app.api_route("/peach-sdk.js", methods=["GET", "HEAD"], include_in_schema=False)
+@app.api_route("/peach-sdk1.js", methods=["GET", "HEAD"], include_in_schema=False)
 async def peach_sdk() -> FileResponse:
+    if not SDK_PATH.exists():
+        raise HTTPException(status_code=404, detail="SDK file not found")
+    return FileResponse(SDK_PATH, media_type="application/javascript")
+
+
+@app.api_route("/peach-sdk.js", methods=["GET", "HEAD"], include_in_schema=False)
+async def peach_sdk_legacy() -> FileResponse:
     if not SDK_PATH.exists():
         raise HTTPException(status_code=404, detail="SDK file not found")
     return FileResponse(SDK_PATH, media_type="application/javascript")

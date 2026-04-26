@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Hoodie Test — Add to Cart</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="./peach-sdk1.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #f5f3ef;
+  --bg2: #ffffff;
+  --bg3: #f0ede8;
+  --border: rgba(0,0,0,0.07);
+  --border2: rgba(0,0,0,0.12);
+  --indigo: #4a3fdb;
+  --text: #1a1816;
+  --text2: #6b6560;
+  --mono: 'Space Mono', monospace;
+  --sans: 'Plus Jakarta Sans', sans-serif;
+}
+html, body { width:100%; min-height:100%; background:var(--bg); color:var(--text); font-family:var(--sans); -webkit-font-smoothing:antialiased; }
+.browser {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.browser-bar {
+  height: 38px;
+  background: #e8e8e8;
+  border-bottom: 1px solid #d8d8d8;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.dots { display: flex; gap: 5px; }
+.dot { width: 11px; height: 11px; border-radius: 50%; }
+.address {
+  flex: 1;
+  height: 24px;
+  background: #fff;
+  border: 1px solid #d0d0d0;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  gap: 6px;
+}
+.address span { font-size: 12px; color: #666; font-family: var(--mono); }
+.complete-toast {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  background: #ecfdf5;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.14);
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  transition: opacity .2s, transform .2s;
+}
+.complete-toast.show { opacity: 1; transform: translateY(0); }
+</style>
+<script>
+(function () {
+  function getQueryParam(name) {
+    var params = new URLSearchParams(window.location.search)
+    return params.get(name)
+  }
+
+  function getOrCreateSessionId() {
+    var key = 'agentsplit_session_id'
+    var existingSessionId = localStorage.getItem(key)
+
+    if (existingSessionId) {
+      return existingSessionId
+    }
+
+    var sessionId =
+      'session_' +
+      Date.now() +
+      '_' +
+      Math.random().toString(36).slice(2)
+
+    localStorage.setItem(key, sessionId)
+
+    return sessionId
+  }
+
+  function showCompleteToast() {
+    var toast = document.querySelector('.complete-toast')
+    if (!toast) return
+
+    toast.classList.add('show')
+    setTimeout(function () {
+      toast.classList.remove('show')
+    }, 2500)
+  }
+
+  function getSdkConfig() {
+    return {
+      campaignId:
+        getQueryParam('campaignId') ||
+        getQueryParam('campaign_id') ||
+        document.body.dataset.campaignId ||
+        'demo-campaign',
+      sessionId:
+        getQueryParam('sessionId') ||
+        getQueryParam('session_id') ||
+        getOrCreateSessionId(),
+      variant:
+        getQueryParam('variant') ||
+        getQueryParam('variant_name') ||
+        document.body.dataset.variantName ||
+        'A',
+      apiUrl:
+        getQueryParam('apiUrl') ||
+        getQueryParam('api_url') ||
+        document.body.dataset.apiUrl ||
+        '',
+      successEvent:
+        getQueryParam('successEvent') ||
+        getQueryParam('success_event') ||
+        document.body.dataset.successEvent ||
+        'task_completed',
+      debug:
+        getQueryParam('debug') === '1' ||
+        getQueryParam('debug') === 'true' ||
+        document.body.dataset.debug === 'true'
+    }
+  }
+
+  window.PeachTest = {
+    completed: false,
+    config: null,
+
+    init: function () {
+      var sdkConfig = getSdkConfig()
+      window.PeachTest.config = sdkConfig
+
+      if (!window.AgentSplit || typeof window.AgentSplit.init !== 'function') {
+        console.warn('AgentSplit SDK is not loaded')
+        return
+      }
+
+      try {
+        window.AgentSplit.init({
+          campaignId: sdkConfig.campaignId,
+          sessionId: sdkConfig.sessionId,
+          variant: sdkConfig.variant,
+          variant_name: sdkConfig.variant,
+          apiUrl: sdkConfig.apiUrl,
+          successEvent: sdkConfig.successEvent,
+          debug: sdkConfig.debug
+        })
+      } catch (error) {
+        console.warn('AgentSplit init failed:', error)
+      }
+    },
+
+    completeTask: function (successEvent, extraPayload) {
+      if (window.PeachTest.completed) return
+      window.PeachTest.completed = true
+
+      var payload = Object.assign(
+        {
+          reason: 'task_completed',
+          success_event: successEvent || window.PeachTest.config.successEvent,
+          variant: window.PeachTest.config.variant
+        },
+        extraPayload || {}
+      )
+
+      if (window.AgentSplit && typeof window.AgentSplit.completeTask === 'function') {
+        try {
+          // Your SDK does both things here:
+          // 1. window.parent.postMessage({ source: 'agentsplit', type: 'event', data })
+          // 2. fetch(apiUrl + '/events', ...) when apiUrl is provided
+          window.AgentSplit.completeTask(payload)
+        } catch (error) {
+          console.warn('AgentSplit completeTask failed:', error)
+        }
+      } else if (window.parent && window.parent !== window) {
+        window.parent.postMessage(
+          {
+            source: 'agentsplit',
+            type: 'event',
+            data: {
+              campaign_id: window.PeachTest.config.campaignId,
+              campaignId: window.PeachTest.config.campaignId,
+              sessionId: window.PeachTest.config.sessionId,
+              variant: window.PeachTest.config.variant,
+              variant_name: window.PeachTest.config.variant,
+              event: 'task_completed',
+              payload: payload,
+              timestamp: new Date().toISOString()
+            }
+          },
+          '*'
+        )
+      }
+
+      showCompleteToast()
+    }
+  }
+
+  window.addEventListener('DOMContentLoaded', function () {
+    window.PeachTest.init()
+  })
+})()
+</script>
+
+<style>
+.site {
+  display: flex;
+  min-height: calc(100vh - 38px);
+  background: #fff;
+}
+.sidebar {
+  width: 190px;
+  background: #fafafa;
+  border-right: 1px solid #eee;
+  padding: 16px;
+  flex-shrink: 0;
+}
+.section-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: #bbb;
+  margin: 18px 0 10px;
+  letter-spacing: 0.1em;
+}
+.section-title:first-child { margin-top: 0; }
+.category {
+  padding: 6px 10px;
+  border-radius: 5px;
+  margin-bottom: 3px;
+  font-size: 13px;
+  cursor: pointer;
+  color: #555;
+}
+.category.active {
+  background: #ede9ff;
+  color: #4a3fdb;
+  font-weight: 700;
+}
+.color-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.color-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+}
+.color-dot.active { border-color: #333; }
+.size {
+  display: inline-block;
+  margin-right: 5px;
+  margin-bottom: 5px;
+  padding: 3px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #777;
+  cursor: pointer;
+}
+.size.active {
+  border-color: #333;
+  background: #111;
+  color: #fff;
+}
+.content {
+  flex: 1;
+  padding: 20px;
+  overflow: auto;
+}
+.result-text {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 14px;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(150px, 1fr));
+  gap: 14px;
+}
+.product {
+  cursor: pointer;
+}
+.product-image {
+  height: 120px;
+  border-radius: 7px;
+  margin-bottom: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.product-image span { font-size: 26px; opacity: .55; }
+.badge {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  background: #3b82f6;
+  color: #fff;
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-weight: 700;
+}
+.product-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111;
+  margin-bottom: 2px;
+}
+.price {
+  font-size: 12px;
+  color: #888;
+}
+.add-btn {
+  margin-top: 5px;
+  width: 100%;
+  height: 26px;
+  background: #111;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.add-btn:hover { opacity: .88; }
+@media (max-width: 800px) {
+  .grid { grid-template-columns: repeat(2, minmax(130px, 1fr)); }
+  .sidebar { width: 160px; }
+}
+</style>
+</head>
+<body data-campaign-id="hoodie_test" data-variant-name="hoodie" data-success-event="hoodie_added_to_cart">
+<div class="browser">
+  <div class="browser-bar">
+    <div class="dots">
+      <div class="dot" style="background:#ff5f57"></div>
+      <div class="dot" style="background:#ffbd2e"></div>
+      <div class="dot" style="background:#28c840"></div>
+    </div>
+    <div class="address"><span>🔒 shop.example.com</span></div>
+  </div>
+
+  <main class="site">
+    <aside class="sidebar">
+      <div class="section-title">CATEGORIES</div>
+      <div class="category">All</div>
+      <div class="category active">Hoodies ◀</div>
+      <div class="category">T-Shirts</div>
+      <div class="category">Jackets</div>
+      <div class="category">Pants</div>
+
+      <div class="section-title">COLOR</div>
+      <div class="color-row">
+        <div class="color-dot active" style="background:#3b82f6"></div>
+        <div class="color-dot" style="background:#ef4444"></div>
+        <div class="color-dot" style="background:#111"></div>
+        <div class="color-dot" style="background:#10b981"></div>
+        <div class="color-dot" style="background:#f59e0b"></div>
+        <div class="color-dot" style="background:#8b5cf6"></div>
+      </div>
+
+      <div class="section-title">SIZE</div>
+      <span class="size">XS</span>
+      <span class="size">S</span>
+      <span class="size active">M</span>
+      <span class="size">L</span>
+      <span class="size">XL</span>
+    </aside>
+
+    <section class="content">
+      <div class="result-text">Showing <strong>Blue hoodies · Size M</strong> · 124 results</div>
+      <div class="grid">
+        <article class="product">
+          <div class="product-image" style="background:#bfdbfe"><span>👕</span><div class="badge">BEST MATCH</div></div>
+          <div class="product-name">Classic Blue Hoodie</div>
+          <div class="price">$39.99</div>
+          <button class="add-btn" onclick="PeachTest.completeTask('hoodie_added_to_cart', { item: 'Classic Blue Hoodie', color: 'blue', size: 'M' })">Add to cart</button>
+        </article>
+        <article class="product"><div class="product-image" style="background:#93c5fd"><span>👕</span></div><div class="product-name">Sport Zip Hoodie</div><div class="price">$54.00</div></article>
+        <article class="product"><div class="product-image" style="background:#dbeafe"><span>👕</span></div><div class="product-name">Oversized Pullover</div><div class="price">$49.50</div></article>
+        <article class="product"><div class="product-image" style="background:#eff6ff"><span>👕</span></div><div class="product-name">Vintage Wash</div><div class="price">$44.00</div></article>
+        <article class="product"><div class="product-image" style="background:#bfdbfe"><span>👕</span></div><div class="product-name">Fleece Quarter-Zip</div><div class="price">$38.00</div></article>
+        <article class="product"><div class="product-image" style="background:#93c5fd"><span>👕</span><div class="badge" style="background:#555">NEW</div></div><div class="product-name">Premium Hoodie</div><div class="price">$62.00</div></article>
+        <article class="product"><div class="product-image" style="background:#dbeafe"><span>👕</span></div><div class="product-name">Lightweight</div><div class="price">$29.99</div></article>
+        <article class="product"><div class="product-image" style="background:#bfdbfe"><span>👕</span></div><div class="product-name">Ribbed Hoodie</div><div class="price">$41.00</div></article>
+      </div>
+    </section>
+  </main>
+</div>
+<div class="complete-toast">Task completed ✓</div>
+</body>
+</html>
