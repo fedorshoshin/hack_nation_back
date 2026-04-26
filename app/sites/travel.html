@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>flyfast.travel</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-font-smoothing: antialiased; overflow-x: hidden; overflow-y: auto; }
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 2px; }
+
+/* Hero / search */
+.hero {
+  background: linear-gradient(135deg, #0c4a6e 0%, #0369a1 100%);
+  padding: 20px 28px 28px;
+}
+.brand { color: #fff; font-weight: 800; font-size: 18px; margin-bottom: 18px; }
+.trip-tabs { display: flex; gap: 18px; margin-bottom: 14px; }
+.trip-tab {
+  font-size: 13px; cursor: pointer; padding-bottom: 4px;
+  border-bottom: 2px solid transparent; transition: color 0.12s, border-color 0.12s;
+  color: rgba(255,255,255,0.55);
+}
+.trip-tab.active { color: #fff; font-weight: 700; border-bottom-color: #38bdf8; }
+.trip-tab:hover:not(.active) { color: rgba(255,255,255,0.8); }
+
+.search-box {
+  background: rgba(255,255,255,0.12); border-radius: 12px;
+  padding: 14px; backdrop-filter: blur(8px);
+}
+.search-fields { display: grid; grid-template-columns: 1fr 32px 1fr 1fr 1fr auto; gap: 8px; align-items: center; }
+.search-field {
+  background: rgba(255,255,255,0.15); border-radius: 9px; padding: 9px 13px; cursor: pointer;
+  transition: background 0.12s;
+}
+.search-field:hover { background: rgba(255,255,255,0.22); }
+.search-field-label { font-size: 9px; color: rgba(255,255,255,0.55); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 3px; }
+.search-field-value { font-size: 14px; color: #fff; font-weight: 600; }
+.swap-btn { text-align: center; color: rgba(255,255,255,0.5); font-size: 18px; cursor: pointer; }
+.search-cta {
+  height: 48px; padding: 0 24px; background: #f59e0b; color: #fff;
+  border: none; border-radius: 9px; font-weight: 800; font-size: 14px;
+  font-family: inherit; cursor: pointer; transition: opacity 0.12s, transform 0.1s;
+  white-space: nowrap;
+}
+.search-cta:hover { opacity: 0.88; }
+.search-cta:active { transform: scale(0.97); }
+
+/* Results */
+.results { padding: 18px 28px; }
+.results-meta { font-size: 13px; color: #64748b; margin-bottom: 16px; }
+
+.flight-list { display: flex; flex-direction: column; gap: 10px; }
+.flight-card {
+  background: #fff; border: 1.5px solid #e2e8f0; border-radius: 12px;
+  padding: 14px 18px; display: flex; align-items: center; gap: 16px;
+  transition: box-shadow 0.18s, transform 0.14s; cursor: pointer;
+}
+.flight-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.09); transform: translateY(-1px); }
+.flight-card.highlighted { border-color: #0284c7; }
+
+.airline-logo {
+  width: 46px; height: 46px; border-radius: 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 22px;
+}
+.airline-name { font-weight: 700; font-size: 14px; }
+.flight-stops { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+
+.time-block { text-align: center; }
+.time-val { font-weight: 700; font-size: 15px; }
+.time-code { font-size: 10px; color: #94a3b8; margin-top: 2px; }
+
+.duration-block { text-align: center; flex: 1; }
+.duration-line { display: flex; align-items: center; gap: 6px; color: #94a3b8; font-size: 12px; }
+.duration-dash { flex: 1; height: 1px; background: #e2e8f0; }
+.duration-plane { font-size: 13px; }
+
+.flight-badge {
+  font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 10px;
+}
+.badge-blue { background: #e0f2fe; color: #0284c7; }
+.badge-amber { background: #fef3c7; color: #a16207; }
+
+.price-block { text-align: right; }
+.price-val { font-weight: 800; font-size: 19px; color: #0f172a; }
+.select-btn {
+  display: block; margin-top: 6px; height: 32px; padding: 0 14px;
+  background: #0284c7; color: #fff; border: none; border-radius: 7px;
+  font-size: 12px; font-weight: 700; font-family: inherit; cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.select-btn:hover { opacity: 0.85; }
+.select-btn:active { transform: scale(0.97); }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="brand">flyfast ✈️</div>
+  <div class="trip-tabs">
+    <div class="trip-tab active">Round-trip</div>
+    <div class="trip-tab">One-way</div>
+    <div class="trip-tab">Multi-city</div>
+  </div>
+  <div class="search-box">
+    <div class="search-fields">
+      <div class="search-field">
+        <div class="search-field-label">FROM</div>
+        <div class="search-field-value">Moscow (SVO)</div>
+      </div>
+      <div class="swap-btn">⇄</div>
+      <div class="search-field">
+        <div class="search-field-label">TO</div>
+        <div class="search-field-value">Dubai (DXB)</div>
+      </div>
+      <div class="search-field">
+        <div class="search-field-label">DEPART</div>
+        <div class="search-field-value">Mar 15</div>
+      </div>
+      <div class="search-field">
+        <div class="search-field-label">RETURN</div>
+        <div class="search-field-value">Mar 22</div>
+      </div>
+      <button class="search-cta">Search</button>
+    </div>
+  </div>
+</div>
+
+<div class="results">
+  <div class="results-meta">156 flights found · Moscow → Dubai · Mar 15–22 · 1 adult</div>
+  <div class="flight-list">
+
+    <div class="flight-card highlighted">
+      <div class="airline-logo" style="background:#e0f2fe">✈️</div>
+      <div>
+        <div class="airline-name">Emirates</div>
+        <div class="flight-stops">Direct</div>
+      </div>
+      <div class="time-block">
+        <div class="time-val">06:30</div>
+        <div class="time-code">SVO</div>
+      </div>
+      <div class="duration-block">
+        <div class="duration-line">
+          <div class="duration-dash"></div>
+          <div class="duration-plane">✈</div>
+          <div style="font-size:11px;color:#64748b">6h 15m</div>
+          <div class="duration-dash"></div>
+        </div>
+      </div>
+      <div class="time-block">
+        <div class="time-val">11:45</div>
+        <div class="time-code">DXB</div>
+      </div>
+      <div class="flight-badge badge-blue">BEST VALUE</div>
+      <div class="price-block">
+        <div class="price-val">$342</div>
+        <button class="select-btn cta-btn">Select</button>
+      </div>
+    </div>
+
+    <div class="flight-card">
+      <div class="airline-logo" style="background:#f0fdf4">✈️</div>
+      <div>
+        <div class="airline-name">flydubai</div>
+        <div class="flight-stops">Direct</div>
+      </div>
+      <div class="time-block">
+        <div class="time-val">09:15</div>
+        <div class="time-code">SVO</div>
+      </div>
+      <div class="duration-block">
+        <div class="duration-line">
+          <div class="duration-dash"></div>
+          <div class="duration-plane">✈</div>
+          <div style="font-size:11px;color:#64748b">6h 15m</div>
+          <div class="duration-dash"></div>
+        </div>
+      </div>
+      <div class="time-block">
+        <div class="time-val">14:30</div>
+        <div class="time-code">DXB</div>
+      </div>
+      <div style="width:80px"></div>
+      <div class="price-block">
+        <div class="price-val">$289</div>
+        <button class="select-btn cta-btn">Select</button>
+      </div>
+    </div>
+
+    <div class="flight-card">
+      <div class="airline-logo" style="background:#fef3c7">✈️</div>
+      <div>
+        <div class="airline-name">Aeroflot</div>
+        <div class="flight-stops">1 stop</div>
+      </div>
+      <div class="time-block">
+        <div class="time-val">14:00</div>
+        <div class="time-code">SVO</div>
+      </div>
+      <div class="duration-block">
+        <div class="duration-line">
+          <div class="duration-dash"></div>
+          <div class="duration-plane">✈</div>
+          <div style="font-size:11px;color:#64748b">7h 40m</div>
+          <div class="duration-dash"></div>
+        </div>
+      </div>
+      <div class="time-block">
+        <div class="time-val">21:40</div>
+        <div class="time-code">DXB</div>
+      </div>
+      <div class="flight-badge badge-amber">↓ CHEAPEST</div>
+      <div class="price-block">
+        <div class="price-val">$221</div>
+        <button class="select-btn cta-btn">Select</button>
+      </div>
+    </div>
+
+    <div class="flight-card">
+      <div class="airline-logo" style="background:#fdf4ff">✈️</div>
+      <div>
+        <div class="airline-name">Air Arabia</div>
+        <div class="flight-stops">Direct</div>
+      </div>
+      <div class="time-block">
+        <div class="time-val">21:30</div>
+        <div class="time-code">SVO</div>
+      </div>
+      <div class="duration-block">
+        <div class="duration-line">
+          <div class="duration-dash"></div>
+          <div class="duration-plane">✈</div>
+          <div style="font-size:11px;color:#64748b">6h 45m</div>
+          <div class="duration-dash"></div>
+        </div>
+      </div>
+      <div class="time-block">
+        <div class="time-val">05:15</div>
+        <div class="time-code">DXB</div>
+      </div>
+      <div style="width:80px"></div>
+      <div class="price-block">
+        <div class="price-val">$308</div>
+        <button class="select-btn cta-btn">Select</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function completeTask() {
+  window.parent.postMessage({ type: 'taskComplete' }, '*');
+}
+document.querySelectorAll('.cta-btn').forEach(btn => {
+  btn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    completeTask();
+  });
+});
+</script>
+</body>
+</html>

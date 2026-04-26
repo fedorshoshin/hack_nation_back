@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>bitebay.app</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-font-smoothing: antialiased; overflow-x: hidden; overflow-y: auto; }
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-thumb { background: rgba(255,107,53,0.3); border-radius: 2px; }
+
+/* Header */
+header {
+  background: #ff6b35; padding: 13px 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 10;
+}
+.brand { color: #fff; font-weight: 900; font-size: 18px; }
+.location {
+  background: rgba(255,255,255,0.2); border-radius: 9px;
+  padding: 7px 14px; display: flex; align-items: center; gap: 6px;
+  color: #fff; font-size: 13px; cursor: pointer;
+  transition: background 0.12s;
+}
+.location:hover { background: rgba(255,255,255,0.28); }
+.cart-btn {
+  height: 36px; padding: 0 16px;
+  background: rgba(255,255,255,0.2); color: #fff; border: none;
+  border-radius: 8px; font-size: 13px; font-weight: 600; font-family: inherit;
+  cursor: pointer; transition: background 0.12s;
+}
+.cart-btn:hover { background: rgba(255,255,255,0.3); }
+
+/* Content */
+.content { padding: 16px 24px; }
+
+/* Category tabs */
+.cat-scroll { display: flex; gap: 8px; margin-bottom: 18px; overflow-x: auto; padding-bottom: 2px; }
+.cat-scroll::-webkit-scrollbar { display: none; }
+.cat-tab {
+  padding: 8px 16px; border-radius: 22px; border: none; white-space: nowrap;
+  font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer;
+  background: #f1f5f9; color: #475569; transition: all 0.12s;
+  flex-shrink: 0;
+}
+.cat-tab:hover:not(.active) { background: #e2e8f0; color: #1e293b; }
+.cat-tab.active { background: #ff6b35; color: #fff; }
+
+/* Food grid */
+.food-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.food-card {
+  background: #fff; border-radius: 14px; overflow: hidden;
+  border: 1px solid #f1f5f9; box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  transition: box-shadow 0.18s, transform 0.14s;
+}
+.food-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.1); transform: translateY(-2px); }
+
+.food-thumb {
+  height: 110px; display: flex; align-items: center; justify-content: center;
+  font-size: 36px; position: relative;
+}
+.top-pick-badge {
+  position: absolute; top: 9px; left: 9px;
+  background: #ef4444; color: #fff; font-size: 9px; font-weight: 700;
+  padding: 3px 8px; border-radius: 10px;
+}
+.food-info { padding: 11px 13px 13px; }
+.food-name { font-weight: 700; font-size: 13px; margin-bottom: 3px; }
+.food-meta { font-size: 11px; color: #94a3b8; margin-bottom: 8px; }
+.food-footer { display: flex; justify-content: space-between; align-items: center; }
+.food-price { font-weight: 800; font-size: 15px; }
+.food-time { font-size: 10px; color: #94a3b8; margin-top: 1px; }
+
+/* Add button + counter */
+.add-wrap { display: flex; align-items: center; gap: 0; }
+.add-btn {
+  width: 34px; height: 34px; border-radius: 50%; background: #ff6b35;
+  color: #fff; border: none; font-size: 18px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s, transform 0.12s;
+  font-family: inherit; font-weight: 700; line-height: 1;
+}
+.add-btn:hover { background: #e55a25; transform: scale(1.1); }
+.add-btn:active { transform: scale(0.95); }
+.qty-counter {
+  display: none; align-items: center; gap: 6px;
+  background: #fff3ef; border: 1.5px solid #ff6b35;
+  border-radius: 20px; padding: 3px 10px; gap: 8px;
+}
+.qty-counter.visible { display: flex; }
+.qty-num { font-weight: 700; font-size: 14px; color: #ff6b35; min-width: 14px; text-align: center; }
+.qty-minus {
+  width: 22px; height: 22px; border-radius: 50%; background: #ff6b35;
+  color: #fff; border: none; font-size: 14px; cursor: pointer; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; line-height: 1;
+  transition: background 0.12s;
+}
+.qty-minus:hover { background: #e55a25; }
+.qty-plus {
+  width: 22px; height: 22px; border-radius: 50%; background: #ff6b35;
+  color: #fff; border: none; font-size: 14px; cursor: pointer; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; line-height: 1;
+  transition: background 0.12s;
+}
+.qty-plus:hover { background: #e55a25; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">bitebay 🍔</div>
+  <div class="location">📍 Moscow, Tverskaya St</div>
+  <button class="cart-btn" id="cart-btn">🛒 Cart (<span id="cart-count">0</span>)</button>
+</header>
+
+<div class="content">
+  <div class="cat-scroll">
+    <button class="cat-tab">🍕 Pizza</button>
+    <button class="cat-tab active">🍔 Burgers</button>
+    <button class="cat-tab">🌮 Tacos</button>
+    <button class="cat-tab">🍜 Noodles</button>
+    <button class="cat-tab">🥗 Salads</button>
+    <button class="cat-tab">🍣 Sushi</button>
+  </div>
+
+  <div class="food-grid" id="food-grid"></div>
+</div>
+
+<script>
+const items = [
+  { name: 'Classic Smash Burger',  rest: 'BurgerLab',      price: '$12.50', time: '25–35 min', rating: '4.8', bg: '#fef3c7', top: false },
+  { name: 'Double Cheese Stack',   rest: 'The Patty Co.',  price: '$14.00', time: '20–30 min', rating: '4.9', bg: '#fee2e2', top: true  },
+  { name: 'Crispy Chicken Burger', rest: 'FingerFood',      price: '$11.00', time: '30–40 min', rating: '4.6', bg: '#dbeafe', top: false },
+  { name: 'BBQ Bacon Burger',      rest: 'SmokeHouse',     price: '$13.50', time: '25–35 min', rating: '4.7', bg: '#fce7f3', top: false },
+  { name: 'Mushroom Swiss',        rest: 'GreenPatty',     price: '$12.00', time: '20–30 min', rating: '4.5', bg: '#d1fae5', top: false },
+  { name: 'Spicy Jalapeño',        rest: 'HeatBurger',     price: '$11.50', time: '25–35 min', rating: '4.7', bg: '#ede9fe', top: false },
+];
+
+let cartTotal = 0;
+let taskDone = false;
+
+function completeTask() {
+  window.parent.postMessage({ type: 'taskComplete' }, '*');
+}
+
+function updateCartBadge() {
+  document.getElementById('cart-count').textContent = cartTotal;
+}
+
+const grid = document.getElementById('food-grid');
+
+items.forEach((item, i) => {
+  const card = document.createElement('div');
+  card.className = 'food-card';
+
+  const itemId = `item-${i}`;
+  card.innerHTML = `
+    <div class="food-thumb" style="background:${item.bg}">
+      🍔
+      ${item.top ? '<div class="top-pick-badge">TOP PICK</div>' : ''}
+    </div>
+    <div class="food-info">
+      <div class="food-name">${item.name}</div>
+      <div class="food-meta">${item.rest} · ★ ${item.rating}</div>
+      <div class="food-footer">
+        <div>
+          <div class="food-price">${item.price}</div>
+          <div class="food-time">${item.time}</div>
+        </div>
+        <div class="add-wrap" id="wrap-${i}">
+          <button class="add-btn" id="add-${i}">+</button>
+          <div class="qty-counter" id="counter-${i}">
+            <button class="qty-minus" data-idx="${i}">−</button>
+            <span class="qty-num" id="num-${i}">1</span>
+            <button class="qty-plus" data-idx="${i}">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  grid.appendChild(card);
+});
+
+// Track quantities per item
+const quantities = new Array(items.length).fill(0);
+
+function setQty(idx, qty) {
+  if (qty < 0) qty = 0;
+  const prev = quantities[idx];
+  quantities[idx] = qty;
+
+  cartTotal += qty - prev;
+  updateCartBadge();
+
+  const addBtn = document.getElementById(`add-${idx}`);
+  const counter = document.getElementById(`counter-${idx}`);
+  const numEl = document.getElementById(`num-${idx}`);
+
+  if (qty === 0) {
+    addBtn.style.display = 'flex';
+    counter.classList.remove('visible');
+  } else {
+    addBtn.style.display = 'none';
+    counter.classList.add('visible');
+    numEl.textContent = qty;
+  }
+
+  // Complete task when cart reaches 2 total items
+  if (!taskDone && cartTotal >= 2) {
+    taskDone = true;
+    setTimeout(completeTask, 300);
+  }
+}
+
+document.getElementById('food-grid').addEventListener('click', function(e) {
+  const addBtn = e.target.closest('.add-btn');
+  const plusBtn = e.target.closest('.qty-plus');
+  const minusBtn = e.target.closest('.qty-minus');
+
+  if (addBtn) {
+    const idx = parseInt(addBtn.id.split('-')[1]);
+    setQty(idx, 1);
+  } else if (plusBtn) {
+    const idx = parseInt(plusBtn.dataset.idx);
+    setQty(idx, quantities[idx] + 1);
+  } else if (minusBtn) {
+    const idx = parseInt(minusBtn.dataset.idx);
+    setQty(idx, quantities[idx] - 1);
+  }
+});
+
+// Category tabs
+document.querySelectorAll('.cat-tab').forEach(tab => {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>

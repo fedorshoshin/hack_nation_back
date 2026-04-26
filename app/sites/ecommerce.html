@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>shop.example.com</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-font-smoothing: antialiased; overflow: hidden; }
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 2px; }
+
+.layout { display: flex; height: 100%; }
+
+/* Sidebar */
+.sidebar {
+  width: 196px; flex-shrink: 0;
+  background: #fafafa; border-right: 1px solid #eee;
+  padding: 16px 12px; overflow-y: auto;
+}
+.sidebar-section { font-size: 10px; font-weight: 700; color: #bbb; letter-spacing: 0.1em; margin-bottom: 8px; margin-top: 16px; }
+.sidebar-section:first-child { margin-top: 0; }
+.cat-item {
+  padding: 7px 10px; border-radius: 6px; margin-bottom: 2px;
+  font-size: 13px; cursor: pointer; color: #555;
+  transition: background 0.12s, color 0.12s;
+}
+.cat-item:hover { background: #f0f0f0; color: #111; }
+.cat-item.active { background: #ede9ff; color: #4a3fdb; font-weight: 700; }
+
+/* Color swatches */
+.swatches { display: flex; flex-wrap: wrap; gap: 6px; }
+.swatch {
+  width: 22px; height: 22px; border-radius: 50%; cursor: pointer;
+  border: 2px solid transparent;
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+.swatch:hover { transform: scale(1.15); }
+.swatch.selected { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #333; }
+
+/* Size selector */
+.sizes { display: flex; flex-wrap: wrap; gap: 5px; }
+.size-btn {
+  padding: 4px 9px; border-radius: 5px; font-size: 12px; cursor: pointer;
+  border: 1.5px solid #ddd; background: transparent; color: #777;
+  font-family: inherit; transition: all 0.12s;
+}
+.size-btn:hover { border-color: #999; color: #333; }
+.size-btn.selected { border-color: #111; background: #111; color: #fff; }
+
+/* Main content */
+.main { flex: 1; padding: 16px 20px; overflow-y: auto; }
+
+.results-bar { font-size: 13px; color: #666; margin-bottom: 14px; }
+.results-bar strong { color: #111; }
+
+.product-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+
+.product-card {
+  cursor: pointer; border-radius: 10px; overflow: hidden;
+  border: 1px solid #f0f0f0;
+  transition: box-shadow 0.18s, transform 0.18s;
+}
+.product-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.12); transform: translateY(-2px); }
+
+.product-thumb {
+  height: 120px; display: flex; align-items: center; justify-content: center;
+  font-size: 28px; position: relative;
+}
+.product-badge {
+  position: absolute; top: 7px; left: 7px;
+  font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 4px; color: #fff;
+}
+
+.product-info { padding: 10px 10px 12px; background: #fff; }
+.product-name { font-size: 13px; font-weight: 600; color: #111; margin-bottom: 2px; }
+.product-price { font-size: 12px; color: #888; }
+
+.add-btn {
+  margin-top: 8px; width: 100%; height: 34px;
+  background: #111; color: #fff; border: none; border-radius: 5px;
+  font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer;
+  transition: background 0.12s, transform 0.1s;
+}
+.add-btn:hover { background: #333; }
+.add-btn:active { transform: scale(0.97); }
+</style>
+</head>
+<body>
+<div class="layout">
+  <div class="sidebar">
+    <div class="sidebar-section">CATEGORIES</div>
+    <div class="cat-item">All</div>
+    <div class="cat-item active">Hoodies ◀</div>
+    <div class="cat-item">T-Shirts</div>
+    <div class="cat-item">Jackets</div>
+    <div class="cat-item">Pants</div>
+
+    <div class="sidebar-section">COLOR</div>
+    <div class="swatches">
+      <div class="swatch selected" style="background:#3b82f6" title="Blue"></div>
+      <div class="swatch" style="background:#ef4444" title="Red"></div>
+      <div class="swatch" style="background:#111" title="Black"></div>
+      <div class="swatch" style="background:#10b981" title="Green"></div>
+      <div class="swatch" style="background:#f59e0b" title="Yellow"></div>
+      <div class="swatch" style="background:#8b5cf6" title="Purple"></div>
+    </div>
+
+    <div class="sidebar-section">SIZE</div>
+    <div class="sizes">
+      <button class="size-btn">XS</button>
+      <button class="size-btn">S</button>
+      <button class="size-btn selected">M</button>
+      <button class="size-btn">L</button>
+      <button class="size-btn">XL</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="results-bar">Showing <strong>Blue hoodies · Size M</strong> · 124 results</div>
+    <div class="product-grid" id="grid"></div>
+  </div>
+</div>
+
+<script>
+const products = [
+  { name: 'Classic Blue Hoodie',   price: '$39.99', badge: 'BEST MATCH', badgeColor: '#3b82f6', bg: '#bfdbfe', cta: true },
+  { name: 'Sport Zip Hoodie',      price: '$54.00', badge: null,          badgeColor: '',        bg: '#93c5fd', cta: false },
+  { name: 'Oversized Pullover',    price: '$49.50', badge: null,          badgeColor: '',        bg: '#dbeafe', cta: false },
+  { name: 'Vintage Wash',          price: '$44.00', badge: null,          badgeColor: '',        bg: '#eff6ff', cta: false },
+  { name: 'Fleece Quarter-Zip',    price: '$38.00', badge: null,          badgeColor: '',        bg: '#bfdbfe', cta: false },
+  { name: 'Premium Hoodie',        price: '$62.00', badge: 'NEW',         badgeColor: '#555',    bg: '#93c5fd', cta: false },
+  { name: 'Lightweight Hoodie',    price: '$29.99', badge: null,          badgeColor: '',        bg: '#dbeafe', cta: false },
+  { name: 'Ribbed Hoodie',         price: '$41.00', badge: null,          badgeColor: '',        bg: '#bfdbfe', cta: false },
+];
+
+function completeTask() {
+  window.parent.postMessage({ type: 'taskComplete' }, '*');
+}
+
+const grid = document.getElementById('grid');
+products.forEach((p, i) => {
+  const card = document.createElement('div');
+  card.className = 'product-card';
+  card.innerHTML = `
+    <div class="product-thumb" style="background:${p.bg}">
+      <span>👕</span>
+      ${p.badge ? `<div class="product-badge" style="background:${p.badgeColor}">${p.badge}</div>` : ''}
+    </div>
+    <div class="product-info">
+      <div class="product-name">${p.name}</div>
+      <div class="product-price">${p.price}</div>
+      ${p.cta ? `<button class="add-btn" id="cta-btn">Add to cart</button>` : ''}
+    </div>
+  `;
+  grid.appendChild(card);
+});
+
+document.getElementById('cta-btn').addEventListener('click', function(e) {
+  e.stopPropagation();
+  completeTask();
+});
+
+// Size button toggle
+document.querySelectorAll('.size-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+  });
+});
+
+// Swatch toggle
+document.querySelectorAll('.swatch').forEach(sw => {
+  sw.addEventListener('click', () => {
+    document.querySelectorAll('.swatch').forEach(s => s.classList.remove('selected'));
+    sw.classList.add('selected');
+  });
+});
+</script>
+</body>
+</html>

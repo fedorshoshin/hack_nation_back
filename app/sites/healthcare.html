@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>docbook.health</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-font-smoothing: antialiased; background: #f0fdf4; overflow-x: hidden; overflow-y: auto; }
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-thumb { background: #86efac; border-radius: 2px; }
+
+/* Header */
+header {
+  background: #fff; padding: 12px 28px; border-bottom: 1px solid #e2e8f0;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 10;
+}
+.brand { font-weight: 800; font-size: 17px; color: #166534; }
+.brand span { color: #22c55e; }
+.header-center { display: flex; gap: 8px; }
+.search-input {
+  height: 36px; border: 1px solid #e2e8f0; border-radius: 8px;
+  padding: 0 14px; font-size: 13px; outline: none; width: 220px;
+  font-family: inherit; transition: border-color 0.15s, box-shadow 0.15s;
+}
+.search-input:focus { border-color: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,0.12); }
+.find-btn {
+  height: 36px; padding: 0 16px; background: #16a34a; color: #fff;
+  border: none; border-radius: 8px; font-size: 13px; font-weight: 700;
+  font-family: inherit; cursor: pointer; transition: opacity 0.12s;
+}
+.find-btn:hover { opacity: 0.88; }
+.appts-btn {
+  height: 36px; padding: 0 14px; background: transparent;
+  border: 1px solid #e2e8f0; border-radius: 8px; font-size: 13px;
+  font-family: inherit; cursor: pointer; color: #475569;
+  transition: background 0.12s, border-color 0.12s;
+}
+.appts-btn:hover { background: #f8fafc; border-color: #cbd5e1; }
+
+/* Content */
+.content { padding: 20px 28px; }
+.section-title { font-weight: 700; font-size: 18px; color: #166534; margin-bottom: 4px; }
+.section-sub { font-size: 13px; color: #64748b; margin-bottom: 14px; }
+
+/* Day filter */
+.day-filter { display: flex; gap: 6px; margin-bottom: 20px; }
+.day-btn {
+  padding: 7px 16px; border-radius: 20px; border: 1.5px solid #e2e8f0;
+  background: #fff; font-size: 13px; font-weight: 600; font-family: inherit;
+  color: #64748b; cursor: pointer; transition: all 0.12s;
+}
+.day-btn:hover { border-color: #86efac; color: #166534; }
+.day-btn.active { background: #166534; color: #fff; border-color: #166534; }
+
+/* Doctor grid */
+.doctor-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.doctor-card {
+  background: #fff; border: 1.5px solid #d1fae5; border-radius: 14px;
+  padding: 16px; transition: border-color 0.15s, box-shadow 0.15s, transform 0.14s;
+}
+.doctor-card:hover { border-color: #86efac; box-shadow: 0 4px 16px rgba(34,197,94,0.1); transform: translateY(-1px); }
+
+.doctor-header { display: flex; gap: 10px; margin-bottom: 12px; }
+.doctor-avatar { width: 48px; height: 48px; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+.doctor-name { font-weight: 700; font-size: 13px; margin-bottom: 2px; }
+.doctor-spec { font-size: 11px; color: #64748b; margin-bottom: 3px; }
+.doctor-rating { font-size: 11px; color: #f59e0b; }
+.doctor-rating span { color: #94a3b8; }
+
+.avail-box { border-radius: 8px; padding: 7px 11px; margin-bottom: 12px; font-size: 12px; }
+.avail-box.today { background: #dcfce7; }
+.avail-box.tomorrow { background: #f1f5f9; }
+.avail-time { font-weight: 700; }
+.avail-time.today { color: #15803d; }
+.avail-time.tomorrow { color: #64748b; }
+
+.today-badge {
+  display: inline-block; padding: 2px 8px; border-radius: 8px;
+  background: #dcfce7; color: #15803d; font-size: 10px; font-weight: 700;
+  margin-left: 6px;
+}
+
+.doctor-footer { display: flex; justify-content: space-between; align-items: center; }
+.doctor-price { font-weight: 800; font-size: 16px; }
+.book-btn {
+  height: 32px; padding: 0 16px; background: #16a34a; color: #fff;
+  border: none; border-radius: 7px; font-size: 12px; font-weight: 700;
+  font-family: inherit; cursor: pointer; transition: background 0.15s, transform 0.1s;
+}
+.book-btn:hover { background: #15803d; }
+.book-btn:active { transform: scale(0.97); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">docbook<span>+</span></div>
+  <div class="header-center">
+    <input class="search-input" placeholder="Search symptoms or doctors…">
+    <button class="find-btn">Find doctor</button>
+  </div>
+  <button class="appts-btn">My appointments</button>
+</header>
+
+<div class="content">
+  <div class="section-title">Book an appointment</div>
+  <div class="section-sub">Showing GPs available in Moscow</div>
+
+  <div class="day-filter">
+    <button class="day-btn active">Today</button>
+    <button class="day-btn">Tomorrow</button>
+    <button class="day-btn">This week</button>
+  </div>
+
+  <div class="doctor-grid">
+
+    <div class="doctor-card">
+      <div class="doctor-header">
+        <div class="doctor-avatar" style="background:#dcfce7">👨‍⚕️</div>
+        <div>
+          <div class="doctor-name">Dr. Anna Sokolova</div>
+          <div class="doctor-spec">General Practitioner</div>
+          <div class="doctor-rating">★ 4.9 <span>(247 reviews)</span></div>
+        </div>
+      </div>
+      <div class="avail-box today">
+        <span class="avail-time today">Today 14:30</span>
+        <span class="today-badge">Available today</span>
+      </div>
+      <div class="doctor-footer">
+        <span class="doctor-price">$45</span>
+        <button class="book-btn cta-btn">Book</button>
+      </div>
+    </div>
+
+    <div class="doctor-card">
+      <div class="doctor-header">
+        <div class="doctor-avatar" style="background:#dbeafe">👨‍⚕️</div>
+        <div>
+          <div class="doctor-name">Dr. Ivan Petrov</div>
+          <div class="doctor-spec">Therapist</div>
+          <div class="doctor-rating">★ 4.7 <span>(183 reviews)</span></div>
+        </div>
+      </div>
+      <div class="avail-box today">
+        <span class="avail-time today">Today 16:00</span>
+        <span class="today-badge">Available today</span>
+      </div>
+      <div class="doctor-footer">
+        <span class="doctor-price">$40</span>
+        <button class="book-btn cta-btn">Book</button>
+      </div>
+    </div>
+
+    <div class="doctor-card">
+      <div class="doctor-header">
+        <div class="doctor-avatar" style="background:#fef9c3">👩‍⚕️</div>
+        <div>
+          <div class="doctor-name">Dr. Elena Morozova</div>
+          <div class="doctor-spec">Family Medicine</div>
+          <div class="doctor-rating">★ 4.8 <span>(312 reviews)</span></div>
+        </div>
+      </div>
+      <div class="avail-box tomorrow">
+        <span class="avail-time tomorrow">Tomorrow 09:00</span>
+      </div>
+      <div class="doctor-footer">
+        <span class="doctor-price">$50</span>
+        <button class="book-btn cta-btn">Book</button>
+      </div>
+    </div>
+
+    <div class="doctor-card">
+      <div class="doctor-header">
+        <div class="doctor-avatar" style="background:#fce7f3">👨‍⚕️</div>
+        <div>
+          <div class="doctor-name">Dr. Mikhail Volkov</div>
+          <div class="doctor-spec">GP · Urgent care</div>
+          <div class="doctor-rating">★ 4.6 <span>(94 reviews)</span></div>
+        </div>
+      </div>
+      <div class="avail-box today">
+        <span class="avail-time today">Today 15:15</span>
+        <span class="today-badge">Available today</span>
+      </div>
+      <div class="doctor-footer">
+        <span class="doctor-price">$55</span>
+        <button class="book-btn cta-btn">Book</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function completeTask() {
+  window.parent.postMessage({ type: 'taskComplete' }, '*');
+}
+document.querySelectorAll('.cta-btn').forEach(btn => {
+  btn.addEventListener('click', completeTask);
+});
+
+// Day filter tab toggle
+document.querySelectorAll('.day-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.day-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>

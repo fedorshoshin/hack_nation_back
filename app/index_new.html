@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AgentSplit Test App</title>
+
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #f4f6fb;
+        color: #161616;
+      }
+
+      header {
+        padding: 24px;
+        background: #111827;
+        color: white;
+        text-align: center;
+      }
+
+      main {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 32px 20px;
+      }
+
+      .hero {
+        background: white;
+        border-radius: 20px;
+        padding: 32px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        margin-bottom: 24px;
+      }
+
+      .hero h1 {
+        margin-top: 0;
+        font-size: 40px;
+      }
+
+      .hero p {
+        font-size: 18px;
+        line-height: 1.6;
+        color: #555;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+
+      .card {
+        background: white;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+      }
+
+      .card h3 {
+        margin-top: 0;
+      }
+
+      button {
+        cursor: pointer;
+        border: none;
+        border-radius: 12px;
+        padding: 14px 18px;
+        font-size: 16px;
+        font-weight: 700;
+      }
+
+      .primary {
+        background: #2563eb;
+        color: white;
+      }
+
+      .secondary {
+        background: #e5e7eb;
+        color: #111827;
+      }
+
+      .danger {
+        background: #ef4444;
+        color: white;
+      }
+
+      form {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      input,
+      textarea {
+        width: 100%;
+        padding: 12px 14px;
+        border-radius: 10px;
+        border: 1px solid #d1d5db;
+        font-size: 16px;
+      }
+
+      footer {
+        text-align: center;
+        padding: 24px;
+        color: #777;
+      }
+
+      .debug {
+        margin-top: 24px;
+        background: #111827;
+        color: #d1d5db;
+        padding: 16px;
+        border-radius: 14px;
+        font-size: 14px;
+        overflow-x: auto;
+      }
+    </style>
+  </head>
+
+  <body>
+    <header>
+      <h2>AgentSplit Demo Site</h2>
+      <p>Static HTML test page for SDK tracking</p>
+    </header>
+
+    <main>
+      <section class="hero">
+        <h1>Test campaign landing page</h1>
+        <p>
+          This page is made to test AgentSplit SDK events: page views, clicks,
+          form submits, custom events, task completion and task failure.
+        </p>
+
+        <button class="primary" id="ctaButton" data-testid="main-cta">
+          Start testing
+        </button>
+      </section>
+
+      <section class="grid">
+        <div class="card">
+          <h3>Variant info</h3>
+          <p id="variantText">Loading variant...</p>
+          <button class="secondary" id="changeRouteButton">
+            Simulate route change
+          </button>
+        </div>
+
+        <div class="card">
+          <h3>Custom event</h3>
+          <p>Click this button to send a manual SDK event.</p>
+          <button class="secondary" id="customEventButton">
+            Track custom event
+          </button>
+        </div>
+
+        <div class="card">
+          <h3>Task result</h3>
+          <p>Use these buttons to test campaign completion.</p>
+          <button class="primary" id="completeButton">
+            Complete task
+          </button>
+          <br /><br />
+          <button class="danger" id="failButton">
+            Fail task
+          </button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h3>Feedback form</h3>
+
+        <form id="feedbackForm">
+          <input
+            name="email"
+            type="email"
+            placeholder="Email"
+            aria-label="Email"
+          />
+
+          <textarea
+            name="feedback"
+            rows="4"
+            placeholder="What did you think about this page?"
+            aria-label="Feedback"
+          ></textarea>
+
+          <button class="primary" type="submit">
+            Submit feedback
+          </button>
+        </form>
+      </section>
+
+      <section class="debug">
+        <strong>Debug info:</strong>
+        <pre id="debugOutput"></pre>
+      </section>
+    </main>
+
+    <footer>
+      AgentSplit SDK static test app
+    </footer>
+
+    <!-- Your SDK file -->
+    <script src="./peach-sdk.js"></script>
+
+    <script>
+      function getQueryParam(name) {
+        var params = new URLSearchParams(window.location.search)
+        return params.get(name)
+      }
+
+      function getOrCreateSessionId() {
+        var key = "agentsplit_session_id"
+        var existingSessionId = localStorage.getItem(key)
+
+        if (existingSessionId) {
+          return existingSessionId
+        }
+
+        var sessionId =
+          "session_" +
+          Date.now() +
+          "_" +
+          Math.random().toString(36).slice(2)
+
+        localStorage.setItem(key, sessionId)
+
+        return sessionId
+      }
+
+      var campaignId = getQueryParam("campaignId") || "demo-campaign"
+      var variant = getQueryParam("variant") || "A"
+      var sessionId = getQueryParam("sessionId") || getOrCreateSessionId()
+
+      var apiUrl = getQueryParam("apiUrl") || ""
+
+      document.getElementById("variantText").innerText =
+        "Current variant: " + variant
+
+      document.getElementById("debugOutput").innerText = JSON.stringify(
+        {
+          campaignId: campaignId,
+          sessionId: sessionId,
+          variant: variant,
+          apiUrl: apiUrl || "disabled, only postMessage/debug tracking"
+        },
+        null,
+        2
+      )
+
+      window.AgentSplit.init({
+        campaignId: campaignId,
+        sessionId: sessionId,
+        variant: variant,
+        apiUrl: apiUrl,
+        debug: true
+      })
+
+      document.getElementById("ctaButton").addEventListener("click", function () {
+        window.AgentSplit.track("cta_clicked", {
+          button: "start_testing"
+        })
+      })
+
+      document
+        .getElementById("customEventButton")
+        .addEventListener("click", function () {
+          window.AgentSplit.track("custom_test_event", {
+            source: "manual_button",
+            value: Math.floor(Math.random() * 100)
+          })
+        })
+
+      document
+        .getElementById("completeButton")
+        .addEventListener("click", function () {
+          window.AgentSplit.completeTask({
+            reason: "task_completed",
+            score: 100
+          })
+
+          alert("Task completed event sent")
+        })
+
+      document
+        .getElementById("failButton")
+        .addEventListener("click", function () {
+          window.AgentSplit.failTask({
+            reason: "user_clicked_fail"
+          })
+
+          alert("Task failed event sent")
+        })
+
+      document
+        .getElementById("changeRouteButton")
+        .addEventListener("click", function () {
+          history.pushState({}, "", "/demo-route?step=2")
+
+          window.AgentSplit.track("demo_route_button_clicked", {
+            route: "/demo-route?step=2"
+          })
+        })
+
+      document
+        .getElementById("feedbackForm")
+        .addEventListener("submit", function (event) {
+          event.preventDefault()
+
+          var formData = new FormData(event.target)
+
+          window.AgentSplit.track("feedback_submitted", {
+            email: formData.get("email"),
+            feedbackLength: String(formData.get("feedback") || "").length
+          })
+
+          alert("Feedback submitted")
+          event.target.reset()
+        })
+    </script>
+  </body>
+</html>
