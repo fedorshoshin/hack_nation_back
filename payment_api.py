@@ -23,6 +23,10 @@ class AccessChallenge:
 
 
 class AgentRequest(BaseModel):
+    amount_sats: int = Field(
+        gt=0,
+        description="Amount sender wants to pay in satoshis",
+    )
     body: dict[str, Any] = Field(
         default_factory=dict,
         description="Abstract API request body (shape can evolve later)",
@@ -69,7 +73,6 @@ class AccessChallengeResponse(BaseModel):
 app = FastAPI(title="AI Agent Payments API", version="1.0.0")
 controller = PaymentController(NWC_AGENT, NWC_PLATFORM)
 challenges: dict[str, AccessChallenge] = {}
-ACCESS_PRICE_SATS = 100
 
 
 def _now_iso() -> str:
@@ -125,7 +128,7 @@ async def _refresh_challenge_status(record: AccessChallenge) -> None:
         pass
 
 
-async def _issue_invoice_challenge(amount_sats: int = ACCESS_PRICE_SATS) -> AccessChallenge:
+async def _issue_invoice_challenge(amount_sats: int) -> AccessChallenge:
     created_at = _now_iso()
     macaroon = secrets.token_hex(16)
     invoice = await controller.create_invoice(
@@ -194,7 +197,7 @@ async def protected_resource(
                 },
             )
 
-    challenge = await _issue_invoice_challenge()
+    challenge = await _issue_invoice_challenge(payload.amount_sats)
     token_example = f"L402 {challenge.macaroon}:<preimage-from-paid-invoice>"
     www_authenticate = (
         f'L402 macaroon="{challenge.macaroon}", '
