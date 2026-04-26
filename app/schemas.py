@@ -31,6 +31,9 @@ class AgentCampaignResponse(BaseModel):
     number_of_tests: int
     success_event: str
     task: str
+    payment_invoice: str | None = None
+    payment_hash: str | None = None
+    payment_status: str
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -41,6 +44,7 @@ class AgentCampaignResponse(BaseModel):
 
 
 class UserVariantResponse(BaseModel):
+    id: str | None = None
     link: str | None
     name: str | None
 
@@ -55,6 +59,8 @@ class UserCurrentVariantResponse(BaseModel):
 class UserCompletedTaskCreate(BaseModel):
     campaign_id: str
     user_id: str
+    variant_id: str | None = None
+    variant_name: str | None = None
     metrics: dict[str, Any] = Field(
         default_factory=dict,
         examples=[
@@ -73,10 +79,48 @@ class UserCompletedTaskResponse(BaseModel):
     id: str
     campaign_id: str
     user_id: str
+    variant_id: str | None = None
+    variant_name: str | None = None
     metrics: dict[str, Any]
     success_event: str
+    payout_sats: int | None = None
+    payout_status: str
+    payout_preimage: str | None = None
+    payout_ln_address: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class AgentPaymentStatusCreate(BaseModel):
+    campaign_id: str
+    payment_hash: str
+
+
+class AgentPaymentStatusResponse(BaseModel):
+    campaign_id: str
+    payment_hash: str
+    payment_status: str
+
+
+class AgentCompletedCampaignVariantMetrics(BaseModel):
+    variant_id: str | None
+    variant_name: str | None
+    variant_link: str | None
+    completed_tests: int
+    numeric_averages: dict[str, float]
+    numeric_totals: dict[str, float]
+    metrics: list[dict[str, Any]]
+
+
+class AgentCompletedCampaignResponse(BaseModel):
+    campaign_id: str
+    successed: bool
+    completed_tests: int
+    required_tests: int
+    success_event: str
+    task: str
+    metrics: dict[str, Any]
+    variants: list[AgentCompletedCampaignVariantMetrics]
 
 
 class TesterAssignmentRequest(BaseModel):

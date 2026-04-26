@@ -1,4 +1,7 @@
 fastapi==0.115.12
+aiohttp==3.13.2
+certifi==2026.4.22
+nostr-sdk==0.44.2
 psycopg[binary]==3.2.9
 pydantic-settings==2.9.1
 SQLAlchemy==2.0.40

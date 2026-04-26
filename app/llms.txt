@@ -1,0 +1,432 @@
+# Tentiq
+
+> Hackathon UX A/B testing platform for AI agents, developers, and human testers. Agents create funded campaigns, testers run assigned variants, and Tentiq returns structured metrics so the agent can choose the best UX.
+
+Tentiq lets an AI coding agent submit pages that need A/B testing while a service is being developed. Human testers receive a campaign, complete a task on one random variant, and the platform records UX metrics such as clicks, duration, completion, friction score, and per-variant results.
+
+This is a live hackathon prototype. Prefer the OpenAPI schema for exact request validation.
+
+## Public URLs
+
+```text
+Backend API:       http://178.104.210.8:8000
+OpenAPI JSON:      http://178.104.210.8:8000/openapi.json
+Interactive docs:  http://178.104.210.8:8000/docs
+Tester frontend:   http://178.104.210.8:8001/?sessionId=<session-id>
+Static demo app:   http://178.104.210.8:8002/index_new.html
+Browser SDK:       http://178.104.210.8:8000/peach-sdk.js
+LLM guide:         http://178.104.210.8:8000/llms.txt
+```
+
+The static app directory also serves `peach-sdk.js` and `llms.txt` on port `8002`.
+
+## Core Concepts
+
+**Campaign**: A paid UX test created by an agent. It contains URL variants, a budget in satoshis, requested number of tests, a success event, and a tester task.
+
+**Variant**: One URL/version of the tested page. Metrics are grouped by variant so the agent can compare A/B performance.
+
+**Tester assignment**: `GET /api/user/current_variant` returns one campaign the current prototype user has not used yet, plus one random variant from that campaign.
+
+**Completion**: `POST /api/user/completed_task` records task metrics, links them to the variant, and sends a Lightning payout to the tester wallet.
+
+**Payment**: Campaign creation returns a Lightning invoice. The agent pays it, then calls `POST /api/agent/payment_status`. Campaigns become available to testers only after payment status is `settled`.
+
+## Agent Workflow
+
+```text
+1. POST /api/agent/campaigns
+   Create an A/B test campaign and receive a Lightning invoice.
+
+2. Pay payment_invoice with a Lightning/NWC wallet.
+
+3. POST /api/agent/payment_status
+   Confirm that the campaign invoice is settled.
+
+4. Human testers use the runner at http://178.104.210.8:8001/?sessionId=<id>.
+
+5. GET /api/agent/completed_campaign
+   Poll for progress and final analytics. When completed_tests >= required_tests,
+   successed is true and per-variant metrics are ready for the AI agent.
+```
+
+## Agent API
+
+### Create Campaign
+
+```http
+POST /api/agent/campaigns
+Content-Type: application/json
+```
+
+Request:
+
+```json
+{
+  "variants": [
+    {
+      "name": "Variant A",
+      "link": "http://178.104.210.8:8002/index_new.html"
+    },
+    {
+      "name": "Variant B",
+      "link": "https://example.com/checkout-b"
+    }
+  ],
+  "budget": 1000,
+  "number_of_tests": 5,
+  "success_event": "task_completed",
+  "task": "Open the homepage, try to complete checkout, and report anything confusing. Stop after reaching the final confirmation screen."
+}
+```
+
+Response:
+
+```json
+{
+  "id": "d7c03b8d-0374-410e-be70-2b2aa75e0cac",
+  "campaign_id": "d7c03b8d-0374-410e-be70-2b2aa75e0cac",
+  "variants": [
+    {
+      "id": "47f3bff9-0000-0000-0000-000000000000",
+      "name": "Variant A",
+      "link": "http://178.104.210.8:8002/index_new.html"
+    }
+  ],
+  "budget": 1000,
+  "number_of_tests": 5,
+  "success_event": "task_completed",
+  "task": "Open the homepage...",
+  "payment_invoice": "lnbc...",
+  "payment_hash": "31db7a53acff9e2d...",
+  "payment_status": "pending"
+}
+```
+
+Save `campaign_id`, `payment_invoice`, and `payment_hash`.
+
+### Check Campaign Payment
+
+```http
+POST /api/agent/payment_status
+Content-Type: application/json
+```
+
+Request:
+
+```json
+{
+  "campaign_id": "d7c03b8d-0374-410e-be70-2b2aa75e0cac",
+  "payment_hash": "31db7a53acff9e2d..."
+}
+```
+
+Response:
+
+```json
+{
+  "campaign_id": "d7c03b8d-0374-410e-be70-2b2aa75e0cac",
+  "payment_hash": "31db7a53acff9e2d...",
+  "payment_status": "settled"
+}
+```
+
+Only settled campaigns are returned to testers.
+
+### Get One Available Settled Campaign
+
+```http
+GET /api/agent/campaigns
+```
+
+Returns the oldest settled campaign with its variants. This is primarily an internal/prototype helper.
+
+### Poll Campaign Completion And Analytics
+
+```http
+GET /api/agent/completed_campaign
+```
+
+Returns all settled campaigns with completion progress and metrics.
+
+Example response:
+
+```json
+[
+  {
+    "campaign_id": "74492beb-aa07-4d52-8930-a0c664489349",
+    "successed": true,
+    "completed_tests": 5,
+    "required_tests": 5,
+    "success_event": "task_completed",
+    "task": "Open the homepage and test checkout.",
+    "metrics": {
+      "numeric_averages": {
+        "clicks": 6.4,
+        "duration_ms": 42000,
+        "friction_score": 0.8
+      },
+      "numeric_totals": {
+        "clicks": 32,
+        "duration_ms": 210000,
+        "friction_score": 4
+      },
+      "raw": [
+        {
+          "clicks": 6,
+          "completed": true,
+          "duration_ms": 39000,
+          "friction_score": 1
+        }
+      ]
+    },
+    "variants": [
+      {
+        "variant_id": "e4fc8d47-0a75-4a71-8547-1291f4947b6d",
+        "variant_name": "Variant A",
+        "variant_link": "http://178.104.210.8:8002/index_new.html",
+        "completed_tests": 3,
+        "numeric_averages": {
+          "clicks": 5.3,
+          "duration_ms": 38000,
+          "friction_score": 0.3
+        },
+        "numeric_totals": {
+          "clicks": 16,
+          "duration_ms": 114000,
+          "friction_score": 1
+        },
+        "metrics": [
+          {
+            "clicks": 5,
+            "completed": true,
+            "duration_ms": 37000,
+            "friction_score": 0
+          }
+        ]
+      }
+    ]
+  }
+]
+```
+
+Interpretation:
+
+- `successed` is `true` when `completed_tests >= required_tests`.
+- `metrics.numeric_averages` summarizes numeric fields across the whole campaign.
+- `variants[]` groups the same metrics by tested variant.
+- Lower `duration_ms`, lower `friction_score`, fewer unnecessary `clicks`, and higher `completed` rates usually indicate a better UX. The agent should compare these values per variant.
+
+## Tester API
+
+### Get Current Variant
+
+```http
+GET /api/user/current_variant
+```
+
+Prototype behavior: the backend currently assumes `user_id = "1"`. It returns one campaign that user has not used before and assigns a random variant.
+
+Response:
+
+```json
+{
+  "campaign_id": "74492beb-aa07-4d52-8930-a0c664489349",
+  "variant": {
+    "id": "e4fc8d47-0a75-4a71-8547-1291f4947b6d",
+    "name": "Variant A",
+    "link": "http://178.104.210.8:8002/index_new.html"
+  },
+  "success_event": "task_completed",
+  "task": "Open the homepage and test checkout."
+}
+```
+
+### Complete Task
+
+```http
+POST /api/user/completed_task
+Content-Type: application/json
+```
+
+Request:
+
+```json
+{
+  "campaign_id": "74492beb-aa07-4d52-8930-a0c664489349",
+  "user_id": "1",
+  "variant_id": "e4fc8d47-0a75-4a71-8547-1291f4947b6d",
+  "variant_name": "Variant A",
+  "metrics": {
+    "clicks": 8,
+    "completed": true,
+    "duration_ms": 55000,
+    "friction_score": 1
+  },
+  "success_event": "task_completed"
+}
+```
+
+Behavior:
+
+- Requires campaign `payment_status` to be `settled`.
+- Stores completion metrics linked to `campaign_id`, `variant_id`, and/or `variant_name`.
+- Pays the tester wallet `nwc1777195149882@getalby.com`.
+- Payout amount is `campaign.budget // campaign.number_of_tests` sats.
+- Repeated paid completions for the same `campaign_id + user_id` return the existing paid completion to avoid duplicate payout.
+
+Response includes payout state:
+
+```json
+{
+  "id": "completion-id",
+  "campaign_id": "74492beb-aa07-4d52-8930-a0c664489349",
+  "user_id": "1",
+  "variant_id": "e4fc8d47-0a75-4a71-8547-1291f4947b6d",
+  "variant_name": "Variant A",
+  "metrics": {
+    "clicks": 8,
+    "completed": true,
+    "duration_ms": 55000,
+    "friction_score": 1
+  },
+  "success_event": "task_completed",
+  "payout_sats": 200,
+  "payout_status": "paid",
+  "payout_preimage": "preimage...",
+  "payout_ln_address": "nwc1777195149882@getalby.com"
+}
+```
+
+## Frontend Runner
+
+Open:
+
+```text
+http://178.104.210.8:8001/?sessionId=<unique-session-id>
+```
+
+The runner:
+
+1. Calls `/api/current-campaign` on the Next.js frontend.
+2. That proxies to backend `GET /api/user/current_variant`.
+3. Loads the returned variant URL in an iframe.
+4. Adds query params: `campaignId`, `variant`, `sessionId`, and `apiUrl`.
+5. Receives SDK `postMessage` events from the iframe.
+6. On `task_completed`, posts metrics to backend `POST /api/user/completed_task`.
+
+## Browser SDK
+
+Use the current SDK URL:
+
+```html
+<script src="http://178.104.210.8:8000/peach-sdk.js"></script>
+```
+
+The SDK defines `window.AgentSplit`.
+
+Initialize it on the tested page:
+
+```html
+<script>
+  AgentSplit.init({
+    campaignId: new URLSearchParams(location.search).get("campaignId"),
+    sessionId: new URLSearchParams(location.search).get("sessionId"),
+    variant_name: new URLSearchParams(location.search).get("variant"),
+    apiUrl: new URLSearchParams(location.search).get("apiUrl"),
+    successEvent: "task_completed",
+    debug: false
+  });
+</script>
+```
+
+Auto-tracked behavior:
+
+- `page_view`
+- `click`
+- `form_submit`
+- `javascript_error`
+- `unhandled_rejection`
+- `route_change`
+
+Current metric snapshot:
+
+```json
+{
+  "clicks": 14,
+  "completed": true,
+  "duration_ms": 47200,
+  "friction_score": 0
+}
+```
+
+Call this when the tester reaches the goal:
+
+```js
+AgentSplit.completeTask({
+  final_url: window.location.href,
+  note: "Reached confirmation page"
+});
+```
+
+Every SDK event is sent by `postMessage` to the parent iframe runner:
+
+```json
+{
+  "source": "agentsplit",
+  "type": "event",
+  "data": {
+    "campaign_id": "campaign-id",
+    "campaignId": "campaign-id",
+    "sessionId": "session-id",
+    "variant": "Variant A",
+    "variant_name": "Variant A",
+    "event": "task_completed",
+    "payload": {},
+    "metrics": {
+      "clicks": 8,
+      "completed": true,
+      "duration_ms": 55000,
+      "friction_score": 1
+    },
+    "success_event": "task_completed"
+  }
+}
+```
+
+If `apiUrl` is set, the SDK also posts to `apiUrl + "/events"`. In the current runner this points at the frontend API (`http://178.104.210.8:8001/api/events`).
+
+## Payment Notes
+
+- Campaign invoices are created by backend `POST /api/agent/campaigns`.
+- The backend uses a platform NWC wallet to create invoices and send tester payouts.
+- Testers are paid to `nwc1777195149882@getalby.com` in the current prototype.
+- `POST /payments/invoices` exists as an older prototype endpoint and does not drive the main campaign funding flow. Use `POST /api/agent/campaigns` instead.
+
+## Health Check
+
+```http
+GET /health
+```
+
+Response:
+
+```json
+{ "status": "ok" }
+```
+
+## Good Task Prompt Style
+
+Tasks are displayed directly to testers. Good tasks are short, specific, and include a stopping condition.
+
+Good:
+
+```text
+Find the cheapest business checking account. Navigate to the comparison page and stop before signing up. Report anything confusing.
+```
+
+Bad:
+
+```text
+Test the checkout.
+```

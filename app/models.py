@@ -59,6 +59,9 @@ class Campaign(Base):
     number_of_tests: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     success_event: Mapped[str] = mapped_column(String(128), nullable=False, default="task_completed")
     task: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    payment_invoice: Mapped[str | None] = mapped_column(Text, nullable=True)
+    payment_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    payment_status: Mapped[str] = mapped_column(String(64), nullable=False, default="pending")
 
     status: Mapped[CampaignStatus] = mapped_column(
         SqlEnum(CampaignStatus),
@@ -243,8 +246,17 @@ class UserCompletedTask(Base):
         nullable=False,
     )
     user_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    variant_id: Mapped[str | None] = mapped_column(
+        ForeignKey("variants.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    variant_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     success_event: Mapped[str] = mapped_column(String(128), nullable=False)
     metrics: Mapped[dict] = mapped_column(JSONB, default=dict, nullable=False)
+    payout_sats: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    payout_status: Mapped[str] = mapped_column(String(64), nullable=False, default="pending")
+    payout_preimage: Mapped[str | None] = mapped_column(Text, nullable=True)
+    payout_ln_address: Mapped[str | None] = mapped_column(String(255), nullable=True)
     completed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -252,6 +264,7 @@ class UserCompletedTask(Base):
     )
 
     campaign: Mapped["Campaign"] = relationship(back_populates="user_completed_tasks")
+    variant: Mapped["Variant | None"] = relationship()
 
     __table_args__ = (
         Index("ix_user_completed_tasks_campaign_user", "campaign_id", "user_id"),

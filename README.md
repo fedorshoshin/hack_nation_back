@@ -48,6 +48,32 @@ Interactive API docs are available at `/docs` while the server is running.
 
 The response includes `campaign_id`.
 
+The response also includes a Lightning invoice that must be paid before the
+campaign is available to testers:
+
+```json
+{
+  "campaign_id": "...",
+  "payment_invoice": "lnbc...",
+  "payment_hash": "...",
+  "payment_status": "pending"
+}
+```
+
+### Check Agent Payment
+
+`POST /api/agent/payment_status`
+
+```json
+{
+  "campaign_id": "...",
+  "payment_hash": "..."
+}
+```
+
+The backend checks the platform wallet invoice status. When the payment status
+becomes `settled`, the campaign is marked active and can be served to testers.
+
 ### Get Current User Variant
 
 `GET /api/user/current_variant`
